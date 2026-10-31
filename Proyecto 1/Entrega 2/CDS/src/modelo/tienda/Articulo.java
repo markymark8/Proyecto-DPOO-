@@ -36,7 +36,9 @@ public class Articulo {
 	}
 
 	public void setPrecio(double precio) {
-		this.precio = precio;
+	    if (precio >= 0) {
+	        this.precio = precio;
+	    }
 	}
 
 	public int getCantidadDisponible() {
@@ -57,6 +59,16 @@ public class Articulo {
 
 		    return false;
 		}
+	
+	public boolean aumentarStock(int cantidad) {
+
+	    if (cantidad > 0) {
+	        cantidadDisponible += cantidad;
+	        return true;
+	    }
+
+	    return false;
+	}
 }
 
 
