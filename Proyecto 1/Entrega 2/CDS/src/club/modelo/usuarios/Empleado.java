@@ -1,5 +1,7 @@
 package club.modelo.usuarios;
 
+import club.servicios.ReglaDeNegocioException;
+
 /**
  * Empleado del club (entrenadores y fisioterapeutas). Puede comprar y acumular puntos.
  * Es dueno del codigo de descuento: 15% para el, 8% para los socios que lo reciben.
@@ -9,7 +11,7 @@ public class Empleado extends Usuario implements Comprador {
 
     private String codigoDescuento;
     private int puntosFidelidad;
-    private Socio socio; // puede ser null
+    private Socio socio; 
 
     public Empleado(String login, String nombre, String contrasenaHash, String codigoDescuento) {
         super(login, nombre, contrasenaHash);
@@ -39,20 +41,37 @@ public class Empleado extends Usuario implements Comprador {
         return socio;
     }
 
-    /** TODO (a mano): asignar this.socio y socio.setEmpleado(this) (vinculo en ambos lados). */
+
     public void vincularSocio(Socio socio) {
-        throw new UnsupportedOperationException("TODO: vincularSocio");
+    	if (socio == null) {
+            throw new ReglaDeNegocioException("El socio a vincular no puede ser nulo");
+        }
+        if (socio.getEmpleado() != null && socio.getEmpleado() != this) {
+            throw new ReglaDeNegocioException("El socio ya esta vinculado a otro empleado");
+        }
+    	this.socio = socio;
+    	socio.setEmpleado(this);
     }
 
-    /** TODO (a mano): sumar puntos (rechazar valores negativos con ReglaDeNegocioException). */
+   
     @Override
     public void sumarPuntos(int puntos) {
-        throw new UnsupportedOperationException("TODO: sumarPuntos");
+    	if (puntos < 0) {
+    		throw new ReglaDeNegocioException("La cantidad de puntos a sumar debe ser positiva.");
+    	}
+    	puntosFidelidad += puntos;
     }
 
-    /** TODO (a mano): restar puntos (rechazar si supera el saldo con ReglaDeNegocioException). */
     @Override
     public void restarPuntos(int puntos) {
-        throw new UnsupportedOperationException("TODO: restarPuntos");
+if (puntos < 0) {
+    		
+    		throw new ReglaDeNegocioException("La cantidad de puntos a restar debe ser positiva.");
+    	}
+    	if (puntos > puntosFidelidad) {
+    		throw new ReglaDeNegocioException("Saldo insuficiente: intenta restar " + puntos + " y solo tiene " + puntosFidelidad + " puntos");
+    	}
+    	
+    	puntosFidelidad -= puntos;
     }
 }

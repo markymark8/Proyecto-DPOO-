@@ -1,4 +1,8 @@
 package club.modelo.usuarios;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 
 /**
  * Base de todos los usuarios del sistema (todos tienen login y contraseña).
@@ -36,12 +40,18 @@ public abstract class Usuario {
         this.contrasenaHash = contrasenaHash;
     }
 
-    /**
-     * TODO (a mano): calcular el SHA-256 de la contraseña recibida
-     * (java.security.MessageDigest) y compararlo con contrasenaHash.
-     */
+    public static String hash(String contrasena) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(contrasena.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hashBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
+        }
+    }
+    
     public boolean verificarContrasena(String contrasena) {
-        throw new UnsupportedOperationException("TODO: verificarContrasena");
+        return hash(contrasena).equals(contrasenaHash);
     }
 
     /** Solo Administrador lo sobrescribe para devolver true. */
