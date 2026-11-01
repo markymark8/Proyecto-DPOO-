@@ -1,6 +1,6 @@
 package club.modelo.usuarios;
 
-/** Empleado que planea y dicta sesiones de entrenamiento. */
+
 public class Entrenador extends Empleado {
 
     private int codigo;
