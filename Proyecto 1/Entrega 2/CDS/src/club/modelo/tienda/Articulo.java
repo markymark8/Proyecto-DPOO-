@@ -1,4 +1,4 @@
-package modelo.tienda;
+package club.modelo.tienda;
 
 public class Articulo {
 	
