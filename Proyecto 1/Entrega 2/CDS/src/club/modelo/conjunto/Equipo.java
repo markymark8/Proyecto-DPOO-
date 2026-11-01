@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 import club.modelo.usuarios.Socio;
 
+
 public class Equipo {
 
     private final String id;
@@ -176,5 +177,17 @@ public class Equipo {
                 integrante.retirar();
             }
         }
+    }
+    /** Solo para el repositorio: agrega un integrante ya validado en una sesion anterior. */
+    public void agregarIntegranteCargado(IntegranteEquipo integrante) {
+        if (integrante == null) {
+            throw new ReglaDeNegocioException("El integrante no puede ser nulo");
+        }
+        integrantes.add(integrante);
+    }
+
+    /** Solo para el repositorio: restaura el estado activo/inactivo del equipo. */
+    public void setActivoCargado(boolean activo) {
+        this.activo = activo;
     }
 }

@@ -24,6 +24,24 @@ public class IntegranteEquipo {
         this.amarillasAcumuladasInterno = 0;
         this.suspendidoInterno = false;
     }
+    
+    /** Solo para el repositorio: reconstruye un integrante con el estado guardado en el CSV. */
+    public IntegranteEquipo(Socio socio, Posicion posicion, int numeroCamiseta, LocalDate fechaIngreso,
+                            boolean activo, int amarillasAcumuladas, boolean suspendido) {
+        if (socio == null || posicion == null || fechaIngreso == null) {
+            throw new ReglaDeNegocioException("Datos incompletos para restaurar el integrante");
+        }
+        if (amarillasAcumuladas < 0) {
+            throw new ReglaDeNegocioException("Las amarillas acumuladas no pueden ser negativas");
+        }
+        this.socio = socio;
+        this.posicion = posicion;
+        this.numeroCamiseta = numeroCamiseta;
+        this.fechaIngreso = fechaIngreso;
+        this.activo = activo;
+        this.amarillasAcumuladasInterno = amarillasAcumuladas;
+        this.suspendidoInterno = suspendido;
+    }
 
     public Socio getSocio() { return socio; }
     public Posicion getPosicion() { return posicion; }
@@ -65,5 +83,6 @@ public class IntegranteEquipo {
         suspendidoInterno = false;
         amarillasAcumuladasInterno = 0;
     }
+    
 }
 

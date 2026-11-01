@@ -1,0 +1,13 @@
+idEquipo;loginSocio;posicion;numeroCamiseta;fechaIngreso;activo;amarillas;suspendido
+EQ-001;jug01;PORTERO;1;2026-09-01;true;0;false
+EQ-001;jug02;DEFENSA;2;2026-09-01;true;1;false
+EQ-001;jug03;DEFENSA;3;2026-09-01;true;2;true
+EQ-001;jug04;MEDIOCAMPISTA;8;2026-09-02;true;0;false
+EQ-001;jug05;DELANTERO;9;2026-09-02;false;0;false
+EQ-002;jug01;BASE;5;2026-09-05;true;0;false
+EQ-002;jug06;ALERO;7;2026-09-05;true;0;false
+EQ-003;jug02;LIBERO;4;2026-09-10;true;0;false
+EQ-004;jug07;PORTERO;1;2026-09-12;true;0;false
+EQ-004;jug08;DELANTERO;9;2026-09-12;true;0;false
+EQ-005;jug09;PORTERO;1;2026-03-01;false;0;false
+EQ-005;jug10;DEFENSA;2;2026-03-01;false;0;false

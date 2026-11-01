@@ -6,6 +6,7 @@ import java.util.Map;
 
 import club.modelo.usuarios.Socio;
 import club.modelo.usuarios.Usuario;
+import club.servicios.ReglaDeNegocioException;
 
 
 
@@ -33,9 +34,23 @@ public class ClubSeneca {
         return servicioConjunto;                            
     }                                                       
 
-    /** TODO (a mano): devolver el Socio con ese login; si no existe o no es Socio, lanzar ReglaDeNegocioException. */
     public Socio getSocio(String login) {
-        throw new UnsupportedOperationException("TODO: getSocio");
+
+        Usuario usuario = buscarUsuario(login);
+
+        if (usuario == null) {
+            throw new ReglaDeNegocioException(
+                "No existe el usuario " + login
+            );
+        }
+
+        if (!(usuario instanceof Socio)) {
+            throw new ReglaDeNegocioException(
+                "El usuario " + login + " no es un socio"
+            );
+        }
+
+        return (Socio) usuario;
     }
 
     /** TODO: orden de carga: usuarios, modulo de Marco, modulo de Daniel, comercio. */
