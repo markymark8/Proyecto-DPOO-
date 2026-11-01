@@ -1,23 +1,28 @@
 package club.modelo.usuarios;
 
 import club.servicios.ReglaDeNegocioException;
+import java.util.ArrayList;
+import modelo.ventas.venta;
 
-/**
- * Empleado del club (entrenadores y fisioterapeutas). Puede comprar y acumular puntos.
- * Es dueno del codigo de descuento: 15% para el, 8% para los socios que lo reciben.
- * Puede tener un Socio asociado (opcional).
- */
 public class Empleado extends Usuario implements Comprador {
 
     private String codigoDescuento;
     private int puntosFidelidad;
     private Socio socio; 
+    private ArrayList<Turno> turnos;
+    private ArrayList<SugerenciaProducto> sugerenciasProducto;
+    private ArrayList<venta> ventas;
+    private ArrayList<cambioTurno> cambiosTurno;
 
     public Empleado(String login, String nombre, String contrasenaHash, String codigoDescuento) {
         super(login, nombre, contrasenaHash);
         this.codigoDescuento = codigoDescuento;
         this.puntosFidelidad = 0;
         this.socio = null;
+        this.turnos = new ArrayList<>();
+        this.sugerenciasProducto = new ArrayList<>();
+        this.ventas = new ArrayList<>();
+        this.cambiosTurno = new ArrayList<>();
     }
 
     public String getCodigoDescuento() {

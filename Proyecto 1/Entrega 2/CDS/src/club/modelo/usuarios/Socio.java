@@ -3,18 +3,17 @@ package club.modelo.usuarios;
 import java.time.LocalDate;
 import java.time.Period;
 import club.servicios.ReglaDeNegocioException;
+import modelo.ventas.venta;
+import java.util.ArrayList;
 
-/**
- * Socio del club. Es tambien el "jugador": no existe una clase Jugador.
- * Puede estar asociado (opcionalmente) a un Empleado.
- */
 public class Socio extends Usuario implements Comprador {
 
     private LocalDate fechaNacimiento;
     private int puntosFidelidad;
     private boolean bebidaCaliente;
     private boolean activo;
-    private Empleado empleado; // puede ser null
+    private Empleado empleado; 
+    private ArrayList<venta> ventas;
 
     public Socio(String login, String nombre, String contrasenaHash, LocalDate fechaNacimiento) {
         super(login, nombre, contrasenaHash);
@@ -23,6 +22,7 @@ public class Socio extends Usuario implements Comprador {
         this.bebidaCaliente = false;
         this.activo = true;
         this.empleado = null;
+        this.ventas = new ArrayList<>();
     }
 
     public LocalDate getFechaNacimiento() {
