@@ -16,7 +16,7 @@ public class InscripcionAcademia {
     private LocalDate fechaInscripcion;
     private List<RegistroRanking> historial;
 
-    /** El nivel inicial y el puntaje inicial los decide el servicio (decision de diseno suya). */
+    
     public InscripcionAcademia(Socio socio, Academia academia, Nivel nivel,
             int puntajeRanking, LocalDate fechaInscripcion) {
         this.socio = socio;
