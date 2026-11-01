@@ -1,7 +1,9 @@
 package club.modelo.conjunto;
 
 import java.util.ArrayList;
+import club.servicios.ReglaDeNegocioException;
 import java.util.List;
+import java.time.LocalDate;
 
 import club.modelo.usuarios.Socio;
 
@@ -80,39 +82,99 @@ public class Equipo {
         return cantidad >= deporte.getMinJugadores();
     }
 
-    /**
-     * TODO (a mano). Rechazar con ReglaDeNegocioException si: el equipo esta inactivo,
-     * esta lleno, la edad del socio no cabe en la categoria (categoria.admite),
-     * la posicion no es del deporte (deporte.validaPosicion), la camiseta ya esta usada
-     * o el socio ya es integrante activo de este equipo.
-     * Si todo pasa, crear el IntegranteEquipo y agregarlo a la lista.
-     */
     public void agregarIntegrante(Socio socio, Posicion posicion, int camiseta) {
-        throw new UnsupportedOperationException("TODO: agregarIntegrante");
+    	
+    	if (socio == null) {
+    	    throw new ReglaDeNegocioException("El socio no puede ser nulo");
+    	}
+
+        if (!activo) {
+            throw new ReglaDeNegocioException("El equipo está inactivo");
+        }
+
+        if (estaLleno()) {
+            throw new ReglaDeNegocioException("El equipo está lleno");
+        }
+
+        int edad = socio.getEdad(LocalDate.now());
+
+        if (!categoria.admite(edad)) {
+            throw new ReglaDeNegocioException("El socio no cumple con la edad de la categoría");
+        }
+
+        if (!deporte.validaPosicion(posicion)) {
+            throw new ReglaDeNegocioException("La posición no corresponde al deporte");
+        }
+
+        if (!camisetaDisponible(camiseta)) {
+            throw new ReglaDeNegocioException("El número de camiseta ya está ocupado");
+        }
+
+        for (IntegranteEquipo integrante : getIntegrantesActivos()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                throw new ReglaDeNegocioException("El socio ya pertenece a este equipo");
+            }
+        }
+
+        IntegranteEquipo nuevo = new IntegranteEquipo(
+            socio,
+            posicion,
+            camiseta,
+            LocalDate.now()
+        );
+
+        integrantes.add(nuevo);
     }
 
-    /** TODO (a mano). Buscar el integrante activo de ese socio y llamar a retirar(); rechazar si no esta. */
     public void retirarIntegrante(Socio socio) {
-        throw new UnsupportedOperationException("TODO: retirarIntegrante");
+        for (IntegranteEquipo integrante : integrantes) {
+            if (integrante.isActivo()
+                    && integrante.getSocio().getLogin().equals(socio.getLogin())) {
+
+                integrante.retirar();
+                return;
+            }
+        }
+        throw new ReglaDeNegocioException("El socio no es integrante activo de este equipo");
     }
 
-    /** TODO (a mano). true si los integrantes activos ya alcanzan cupoMaximo. */
     public boolean estaLleno() {
-        throw new UnsupportedOperationException("TODO: estaLleno");
+    	return getIntegrantesActivos().size() >= cupoMaximo;
     }
 
-    /** TODO (a mano). true si ningun integrante activo usa ese numero de camiseta. */
     public boolean camisetaDisponible(int camiseta) {
-        throw new UnsupportedOperationException("TODO: camisetaDisponible");
+    	if (camiseta <= 0) {
+    	    throw new ReglaDeNegocioException("El número de camiseta debe ser positivo");
+    	}
+        for (IntegranteEquipo integrante : getIntegrantesActivos()) {
+            if (integrante.getNumeroCamiseta() == camiseta) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    /** TODO (a mano). Integrantes activos que ademas no estan suspendidos (apoyate en isHabilitado). */
     public List<IntegranteEquipo> getHabilitadosInterno() {
-        throw new UnsupportedOperationException("TODO: getHabilitadosInterno");
+        List<IntegranteEquipo> habilitados = new ArrayList<>();
+
+        for (IntegranteEquipo integrante : integrantes) {
+            if (integrante.isHabilitado()) {
+                habilitados.add(integrante);
+            }
+        }
+        return habilitados;
     }
 
-    /** TODO (a mano). Marcar el equipo como inactivo y retirar a todos sus integrantes activos. */
     public void darDeBaja() {
-        throw new UnsupportedOperationException("TODO: darDeBaja");
+    	if (!activo) {
+            throw new ReglaDeNegocioException("El equipo ya está inactivo");
+        }
+        activo = false;
+
+        for (IntegranteEquipo integrante : integrantes) {
+            if (integrante.isActivo()) {
+                integrante.retirar();
+            }
+        }
     }
 }

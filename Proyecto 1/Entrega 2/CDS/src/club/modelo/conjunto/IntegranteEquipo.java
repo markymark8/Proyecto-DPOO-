@@ -3,6 +3,7 @@ package club.modelo.conjunto;
 import java.time.LocalDate;
 
 import club.modelo.usuarios.Socio;
+import club.servicios.ReglaDeNegocioException;
 
 public class IntegranteEquipo {
 
@@ -34,6 +35,35 @@ public class IntegranteEquipo {
     
     public boolean isHabilitado() {
         return activo && !suspendidoInterno;
+    }
+    
+    public void retirar() {
+        if (!activo) {
+            throw new ReglaDeNegocioException("El integrante ya está retirado");
+        }
+        activo = false;
+    }
+    public void registrarAmarilla() {
+        if (!activo) {
+            throw new ReglaDeNegocioException("El integrante no está activo");
+        }
+        amarillasAcumuladasInterno++;
+
+        if (amarillasAcumuladasInterno >= 2) {
+            suspendidoInterno = true;
+        }
+    }
+    
+    public void registrarRoja() {
+        if (!activo) {
+            throw new ReglaDeNegocioException("El integrante no está activo");
+        }
+        suspendidoInterno = true;
+    }
+    
+    public void levantarSuspensionInterno() {
+        suspendidoInterno = false;
+        amarillasAcumuladasInterno = 0;
     }
 }
 
