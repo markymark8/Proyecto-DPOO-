@@ -14,25 +14,27 @@ public class ClubSeneca {
 
     private final Map<String, Usuario> usuarios;
     private final ServicioConjunto servicioConjunto;
+    private final ServicioPartidos servicioPartidos;
 
     public ClubSeneca() {
         this.usuarios = new HashMap<>();
         this.servicioConjunto = new ServicioConjunto();
+        this.servicioPartidos = new ServicioPartidos();
     }
 
     public void registrarUsuario(Usuario usuario) {
         usuarios.put(usuario.getLogin(), usuario);
     }
 
-    /** Devuelve el usuario con ese login, o null si no existe. */
     public Usuario buscarUsuario(String login) {
         return usuarios.get(login);
     }
-
-    /** Servicio del modulo de deportes de conjunto. */
     public ServicioConjunto getServicioConjunto() {       
         return servicioConjunto;                            
-    }                                                       
+    }         
+    public ServicioPartidos getServicioPartidos() {
+        return servicioPartidos;
+    }
 
     public Socio getSocio(String login) {
 
@@ -52,6 +54,7 @@ public class ClubSeneca {
 
         return (Socio) usuario;
     }
+    
 
     /** TODO: orden de carga: usuarios, modulo de Marco, modulo de Daniel, comercio. */
     public void cargar(Path carpetaDatos) {
