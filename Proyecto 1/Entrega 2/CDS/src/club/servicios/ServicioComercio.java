@@ -3,9 +3,13 @@ package club.servicios;
 
 import java.util.ArrayList;
 
-import club.modelo.tienda.Articulo;
+import modelo.tienda.Articulo;
 import modelo.cafeteria.ProductoCafeteria;
 import modelo.ventas.venta;
+import modelo.ventas.VentaTienda;
+import club.modelo.usuarios.Comprador;
+import club.modelo.usuarios.Empleado;
+import modelo.ventas.VentaCafeteria;
 
 public class ServicioComercio {
 
@@ -51,5 +55,65 @@ public class ServicioComercio {
     public ArrayList<venta> getVentas() {
         return new ArrayList<>(ventas);
     }
+    
+    public void registrarVenta(venta nuevaVenta) {
+
+        if (nuevaVenta == null) {
+            throw new ReglaDeNegocioException(
+                "La venta no puede ser nula");
+        }
+
+        if (ventas.contains(nuevaVenta)) {
+            throw new ReglaDeNegocioException(
+                "Esta venta ya fue registrada");
+        }
+
+        ventas.add(nuevaVenta);
+    }
+    
+
+    public void realizarCompraTienda(
+        VentaTienda ventaTienda,
+        Comprador comprador,
+        String codigoDescuento,
+        ArrayList<Empleado> empleados,
+        int puntosUsar) {
+
+    if (ventaTienda == null) {
+        throw new ReglaDeNegocioException(
+            "La venta de tienda no puede ser nula");
+    }
+
+    if (ventas.contains(ventaTienda)) {
+        throw new ReglaDeNegocioException(
+            "Esta venta ya fue registrada");
+    }
+
+    ventaTienda.confirmarVenta(
+        comprador, codigoDescuento, empleados, puntosUsar);
+
+    registrarVenta(ventaTienda);
+}
+    
+    public void realizarCompraCafeteria(
+            VentaCafeteria ventaCafeteria,
+            Comprador comprador,
+            int puntosUsar) {
+
+        if (ventaCafeteria == null) {
+            throw new ReglaDeNegocioException(
+                "La venta de cafeteria no puede ser nula");
+        }
+
+        if (ventas.contains(ventaCafeteria)) {
+            throw new ReglaDeNegocioException(
+                "Esta venta ya fue registrada");
+        }
+
+        ventaCafeteria.confirmarVenta(comprador, puntosUsar);
+
+        registrarVenta(ventaCafeteria);
+    }
+
 }
 
