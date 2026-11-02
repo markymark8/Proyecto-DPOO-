@@ -24,6 +24,8 @@ import club.modelo.individual.EstadisticaTenisPadel;
 import club.modelo.individual.EstadoAsistencia;
 import club.modelo.individual.EstadoReserva;
 import club.modelo.individual.FeedbackEntrenamiento;
+import club.modelo.individual.SesionEntrenamiento;
+import club.modelo.individual.TipoSesion;
 import club.modelo.individual.InscripcionAcademia;
 import club.modelo.individual.Instalacion;
 import club.modelo.individual.Modalidad;
@@ -256,7 +258,7 @@ public class ServicioIndividual {
         }
         exigir(setsA != setsB, "El resultado no puede ser empate");
 
-        // ELO simplificado: lo que gana un lado lo pierde el otro
+        //  lo que gana un lado lo pierde el otro
         double ra = promedioPuntaje(academia, partido.getLadoA());
         double rb = promedioPuntaje(academia, partido.getLadoB());
         double esperadoA = 1.0 / (1.0 + Math.pow(10.0, (rb - ra) / 400.0));
@@ -286,22 +288,22 @@ public class ServicioIndividual {
 
     
 
-    // ================= Consultas y reportes =================
+    // ================= Métodos de Consultas y reportes =================
 
     public int getRanking(Socio socio, Disciplina disciplina) {
         InscripcionAcademia insc = buscarAcademia(disciplina).getInscripcionDe(socio);
         exigir(insc != null,
-                "El socio " + socio.getLogin() + " no esta inscrito en " + disciplina + ": no tiene ranking en ella");
+                "El socio no esta inscrito en la disciplina: no tiene ranking en ella");
         return insc.getPuntajeRanking();
     }
 
-    public List<EstadisticaRaqueta> getEstadisticas(Socio socio, Disciplina disciplina) {
+    public List<EstadisticaIndividual> getEstadisticas(Socio socio, Disciplina disciplina) {
         exigir(buscarAcademia(disciplina).estaInscrito(socio),
                 "El socio " + socio.getLogin() + " no esta inscrito en " + disciplina + ": no tiene estadisticas en ella");
-        List<EstadisticaRaqueta> resultado = new ArrayList<>();
+        List<EstadisticaIndividual> resultado = new ArrayList<>();
         for (PartidoPractica p : getHistorialPartidosPractica()) {
             if (p.getInstalacion().getDisciplina().equals(disciplina.name())) {
-                for (EstadisticaRaqueta e : p.getEstadisticas()) {
+                for (EstadisticaIndividual e : p.getEstadisticas()) {
                     if (e.getSocio().getLogin().equals(socio.getLogin())) {
                         resultado.add(e);
                     }
@@ -320,6 +322,7 @@ public class ServicioIndividual {
                 .collect(Collectors.toList());
     }
 
+
     public List<SesionEntrenamiento> getHistorialSesiones() {
         return reservas.stream().filter(r -> r instanceof SesionEntrenamiento).map(r -> (SesionEntrenamiento) r)
                 .collect(Collectors.toList());
@@ -337,9 +340,7 @@ public class ServicioIndividual {
                 }
             }
         }
-        exigir(!porSocio.isEmpty(),
-                "No hay datos de asistencia de " + disciplina + " entre " + desde + " y " + hasta);
-        StringBuilder sb = new StringBuilder("Asistencia " + disciplina + " (" + desde + " a " + hasta + "):");
+        StringBuilder sb = new StringBuilder("Asistencia");
         for (Map.Entry<String, List<FeedbackEntrenamiento>> e : porSocio.entrySet()) {
             List<FeedbackEntrenamiento> fs = e.getValue();
             OptionalDouble promedio = fs.stream().filter(f -> f.getNota() != null).mapToInt(FeedbackEntrenamiento::getNota)
@@ -357,16 +358,15 @@ public class ServicioIndividual {
     private long contar(List<FeedbackEntrenamiento> lista, EstadoAsistencia asistencia) {
         return lista.stream().filter(f -> f.getAsistencia() == asistencia).count();
     }
+    
+    
+}
 
-    public List<RegistroRanking> reporteEvolucionRanking(Disciplina disciplina, LocalDate desde, LocalDate hasta) {
-        validarPeriodo(desde, hasta);
-        List<RegistroRanking> lista = new ArrayList<>();
-        for (PartidoPractica p : getHistorialPartidosPractica()) {
-            for (RegistroRanking r : p.getRegistros()) {
-                if (r.getDisciplina() == disciplina && !r.getFecha().isBefore(desde) && !r.getFecha().isAfter(hasta)) {
-                    lista.add(r);
+    
                 
-             
-    }
+  
+            
+        
+            
 
    
