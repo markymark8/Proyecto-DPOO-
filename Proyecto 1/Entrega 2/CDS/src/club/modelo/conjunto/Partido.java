@@ -159,6 +159,14 @@ public abstract class Partido {
         estadisticas.add(estadistica);
     }
 
+    /** Solo para el repositorio: agrega una estadistica ya validada, sin aplicar las reglas de registro. */
+    public void agregarEstadisticaCargada(EstadisticaJugador estadistica) {
+        if (estadistica == null) {
+            throw new ReglaDeNegocioException("La estadística no puede ser nula");
+        }
+        estadisticas.add(estadistica);
+    }
+
     public List<EstadisticaJugador> getEstadisticas() {
         return Collections.unmodifiableList(estadisticas);
     }

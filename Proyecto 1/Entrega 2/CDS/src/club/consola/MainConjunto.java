@@ -25,9 +25,10 @@ public class MainConjunto {
 
         // TEMPORAL: reemplazar por la carga de usuarios.csv cuando exista (Mariana)
         club.registrarUsuario(new Administrador("admin", "Administrador", Usuario.hash("admin123")));
-        for (int i = 0; i < NACIMIENTOS.length; i++) {
+        for (int i = 0; i < 22; i++) {
             String login = String.format("jug%02d", i + 1);
-            club.registrarUsuario(new Socio(login, "Jugador " + login, Usuario.hash("1234"), NACIMIENTOS[i]));
+            club.registrarUsuario(new Socio(login, "Jugador " + login, Usuario.hash("1234"),
+                    NACIMIENTOS[i % NACIMIENTOS.length]));
         }
 
         try {

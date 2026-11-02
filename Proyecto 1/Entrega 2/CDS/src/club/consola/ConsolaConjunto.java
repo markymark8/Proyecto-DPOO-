@@ -9,6 +9,10 @@ import java.util.Scanner;
 import club.modelo.conjunto.Categoria;
 import club.modelo.conjunto.Deporte;
 import club.modelo.conjunto.Equipo;
+import club.modelo.conjunto.EstadisticaBasket;
+import club.modelo.conjunto.EstadisticaFutbol;
+import club.modelo.conjunto.EstadisticaJugador;
+import club.modelo.conjunto.EstadisticaVoleibol;
 import club.modelo.conjunto.IntegranteEquipo;
 import club.modelo.conjunto.Partido;
 import club.modelo.conjunto.PartidoInterno;
@@ -57,6 +61,7 @@ public class ConsolaConjunto {
         if (usuario instanceof Socio) {
             System.out.println("3. Ver mis equipos");
             System.out.println("4. Ver mis partidos");
+            System.out.println("5. Ver mis estadisticas");
         }
         if (usuario.esAdministrador()) {
             System.out.println("5. Crear equipo");
@@ -66,6 +71,8 @@ public class ConsolaConjunto {
             System.out.println("9. Programar partido interno");
             System.out.println("10. Registrar tarjeta");
             System.out.println("11. Registrar resultado");
+            System.out.println("12. Registrar estadisticas de un jugador");
+            System.out.println("13. Ver estadisticas de un partido");
         }
         System.out.println("0. Salir");
         System.out.print("Opcion: ");
@@ -90,8 +97,12 @@ public class ConsolaConjunto {
                 verMisPartidos((Socio) usuario);
                 break;
             case "5":
-                exigirAdmin(usuario);
-                crearEquipo();
+                if (usuario instanceof Socio) {
+                    verMisEstadisticas((Socio) usuario);
+                } else {
+                    exigirAdmin(usuario);
+                    crearEquipo();
+                }
                 break;
             case "6":
                 exigirAdmin(usuario);
@@ -116,6 +127,14 @@ public class ConsolaConjunto {
             case "11":
                 exigirAdmin(usuario);
                 registrarResultado();
+                break;
+            case "12":
+                exigirAdmin(usuario);
+                registrarEstadistica();
+                break;
+            case "13":
+                exigirAdmin(usuario);
+                verEstadisticasPartido();
                 break;
             default:
                 System.out.println("Opcion no valida");
@@ -198,6 +217,90 @@ public class ConsolaConjunto {
         int visitante = leerEntero("Marcador del visitante: ");
         club.getServicioPartidos().registrarResultado(partido, local, visitante);
         System.out.println(">> Resultado registrado: " + local + " - " + visitante);
+    }
+
+    private void registrarEstadistica() {
+        PartidoInterno partido = pedirPartido("Id del partido: ");
+        Socio socio = club.getSocio(leer("Login del jugador: "));
+        ServicioPartidos sp = club.getServicioPartidos();
+        String deporte = partido.getDeporte().getNombre().toUpperCase();
+        switch (deporte) {
+            case "FUTBOL":
+                sp.registrarEstadisticaFutbol(partido, socio,
+                        leerEntero("Goles: "), leerEntero("Asistencias: "));
+                break;
+            case "BASKET":
+                sp.registrarEstadisticaBasket(partido, socio,
+                        leerEntero("Puntos: "), leerEntero("Rebotes: "));
+                break;
+            case "VOLEIBOL":
+                sp.registrarEstadisticaVoleibol(partido, socio,
+                        leerEntero("Aces: "), leerEntero("Bloqueos: "));
+                break;
+            default:
+                throw new ReglaDeNegocioException("Deporte sin estadisticas: " + deporte);
+        }
+        System.out.println(">> Estadisticas registradas");
+    }
+
+    private void verEstadisticasPartido() {
+        Partido partido = pedirPartido("Id del partido: ");
+        if (partido.getEstadisticas().isEmpty()) {
+            System.out.println("Sin estadisticas registradas");
+            return;
+        }
+        for (EstadisticaJugador e : partido.getEstadisticas()) {
+            System.out.println(" - " + e.getJugador().getLogin() + ": " + describirEstadistica(e));
+        }
+    }
+
+    /** HDU 18: estadisticas del jugador, por partido y acumuladas. */
+    private void verMisEstadisticas(Socio socio) {
+        int partidos = 0;
+        int a = 0;
+        int b = 0;
+        for (Partido p : club.getServicioPartidos().getPartidos()) {
+            EstadisticaJugador e = p.getEstadisticaJugador(socio);
+            if (e == null) {
+                continue;
+            }
+            partidos++;
+            System.out.println(" - " + p.getId() + " (" + p.getDeporte().getNombre() + ", "
+                    + p.getFecha() + "): " + describirEstadistica(e));
+            if (e instanceof EstadisticaFutbol) {
+                a += ((EstadisticaFutbol) e).getGoles();
+                b += ((EstadisticaFutbol) e).getAsistencias();
+            } else if (e instanceof EstadisticaBasket) {
+                a += ((EstadisticaBasket) e).getPuntos();
+                b += ((EstadisticaBasket) e).getRebotes();
+            } else if (e instanceof EstadisticaVoleibol) {
+                a += ((EstadisticaVoleibol) e).getAces();
+                b += ((EstadisticaVoleibol) e).getBloqueos();
+            }
+        }
+        if (partidos == 0) {
+            System.out.println("Aun no tienes estadisticas registradas");
+        } else {
+            System.out.println("Partidos con estadisticas: " + partidos
+                    + " | acumulado (1.o + 2.o campo del deporte): " + a + " / " + b);
+        }
+    }
+
+    private String describirEstadistica(EstadisticaJugador e) {
+        if (e instanceof EstadisticaFutbol) {
+            EstadisticaFutbol f = (EstadisticaFutbol) e;
+            return f.getGoles() + " goles, " + f.getAsistencias() + " asistencias, "
+                    + f.getTarjetasAmarillas() + " amarillas" + (f.isTarjetaRoja() ? ", ROJA" : "");
+        }
+        if (e instanceof EstadisticaBasket) {
+            EstadisticaBasket k = (EstadisticaBasket) e;
+            return k.getPuntos() + " puntos, " + k.getRebotes() + " rebotes";
+        }
+        if (e instanceof EstadisticaVoleibol) {
+            EstadisticaVoleibol v = (EstadisticaVoleibol) e;
+            return v.getAces() + " aces, " + v.getBloqueos() + " bloqueos";
+        }
+        return "?";
     }
 
     // ----------------------------------------------------------- consultas
