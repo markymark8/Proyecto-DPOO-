@@ -6,8 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import club.modelo.conjunto.AcumuladoJugador;
 import club.modelo.conjunto.Categoria;
+import club.modelo.conjunto.Competencia;
 import club.modelo.conjunto.Deporte;
+import club.modelo.conjunto.FilaPosicion;
+import club.modelo.conjunto.InscripcionCompetencia;
+import club.modelo.conjunto.InstitucionRival;
+import club.modelo.conjunto.PartidoCompetencia;
 import club.modelo.conjunto.Equipo;
 import club.modelo.conjunto.EstadisticaBasket;
 import club.modelo.conjunto.EstadisticaFutbol;
@@ -22,6 +28,7 @@ import club.modelo.usuarios.Socio;
 import club.modelo.usuarios.Usuario;
 import club.servicios.ClubSeneca;
 import club.servicios.ReglaDeNegocioException;
+import club.servicios.ServicioCompetencias;
 import club.servicios.ServicioConjunto;
 import club.servicios.ServicioPartidos;
 
@@ -62,6 +69,7 @@ public class ConsolaConjunto {
             System.out.println("3. Ver mis equipos");
             System.out.println("4. Ver mis partidos");
             System.out.println("5. Ver mis estadisticas");
+            System.out.println("6. Ver mi desempeno en una competencia");
         }
         if (usuario.esAdministrador()) {
             System.out.println("5. Crear equipo");
@@ -73,6 +81,14 @@ public class ConsolaConjunto {
             System.out.println("11. Registrar resultado");
             System.out.println("12. Registrar estadisticas de un jugador");
             System.out.println("13. Ver estadisticas de un partido");
+            System.out.println("14. Registrar competencia");
+            System.out.println("15. Registrar rival en una competencia");
+            System.out.println("16. Inscribir equipo en una competencia");
+            System.out.println("17. Registrar partido de competencia");
+            System.out.println("18. Registrar resultado de partido de competencia");
+            System.out.println("19. Ver tabla de posiciones");
+            System.out.println("20. Ver estadisticas acumuladas de una competencia");
+            System.out.println("21. Listar competencias");
         }
         System.out.println("0. Salir");
         System.out.print("Opcion: ");
@@ -105,8 +121,12 @@ public class ConsolaConjunto {
                 }
                 break;
             case "6":
-                exigirAdmin(usuario);
-                darDeBajaEquipo();
+                if (usuario instanceof Socio) {
+                    verMiDesempenoCompetencia((Socio) usuario);
+                } else {
+                    exigirAdmin(usuario);
+                    darDeBajaEquipo();
+                }
                 break;
             case "7":
                 exigirAdmin(usuario);
@@ -135,6 +155,38 @@ public class ConsolaConjunto {
             case "13":
                 exigirAdmin(usuario);
                 verEstadisticasPartido();
+                break;
+            case "14":
+                exigirAdmin(usuario);
+                registrarCompetencia();
+                break;
+            case "15":
+                exigirAdmin(usuario);
+                registrarRival();
+                break;
+            case "16":
+                exigirAdmin(usuario);
+                inscribirEquipoEnCompetencia();
+                break;
+            case "17":
+                exigirAdmin(usuario);
+                registrarPartidoCompetencia();
+                break;
+            case "18":
+                exigirAdmin(usuario);
+                registrarResultadoCompetencia();
+                break;
+            case "19":
+                exigirAdmin(usuario);
+                verTablaPosiciones();
+                break;
+            case "20":
+                exigirAdmin(usuario);
+                verEstadisticasAcumuladas();
+                break;
+            case "21":
+                exigirAdmin(usuario);
+                listarCompetencias();
                 break;
             default:
                 System.out.println("Opcion no valida");
@@ -220,7 +272,7 @@ public class ConsolaConjunto {
     }
 
     private void registrarEstadistica() {
-        PartidoInterno partido = pedirPartido("Id del partido: ");
+        Partido partido = pedirPartidoCualquiera("Id del partido (PT- interno, PC- competencia): ");
         Socio socio = club.getSocio(leer("Login del jugador: "));
         ServicioPartidos sp = club.getServicioPartidos();
         String deporte = partido.getDeporte().getNombre().toUpperCase();
@@ -244,7 +296,7 @@ public class ConsolaConjunto {
     }
 
     private void verEstadisticasPartido() {
-        Partido partido = pedirPartido("Id del partido: ");
+        Partido partido = pedirPartidoCualquiera("Id del partido (PT- interno, PC- competencia): ");
         if (partido.getEstadisticas().isEmpty()) {
             System.out.println("Sin estadisticas registradas");
             return;
@@ -361,6 +413,9 @@ public class ConsolaConjunto {
                 if (mios.contains(interno.getLocal()) || mios.contains(interno.getVisitante())) {
                     propios.add(p);
                 }
+            } else if (p instanceof PartidoCompetencia
+                    && ((PartidoCompetencia) p).getInscripcion().tieneJugador(socio.getLogin())) {
+                propios.add(p);
             }
         }
         if (propios.isEmpty()) {
@@ -373,13 +428,196 @@ public class ConsolaConjunto {
     }
 
     private String describir(Partido p) {
-        String enfrentamiento = "(competencia)";
+        String enfrentamiento = "?";
         if (p instanceof PartidoInterno) {
             PartidoInterno i = (PartidoInterno) p;
             enfrentamiento = i.getLocal().getNombre() + " vs " + i.getVisitante().getNombre();
+        } else if (p instanceof PartidoCompetencia) {
+            PartidoCompetencia c = (PartidoCompetencia) p;
+            enfrentamiento = c.getNombreLocal() + " vs " + c.getNombreVisitante()
+                    + " [" + c.getIdCompetencia() + ", jornada " + c.getJornada()
+                    + ", " + c.getEscenario() + "]";
         }
         return p.getId() + " | " + enfrentamiento + " | " + p.getFecha() + " | " + p.getEstado()
                 + (p.estaJugado() ? " | " + p.getMarcadorLocal() + "-" + p.getMarcadorVisitante() : "");
+    }
+
+    // --------------------------------------------------------- competencias
+
+    private void registrarCompetencia() {
+        String nombre = leer("Nombre de la competencia: ");
+        String organizador = leer("Organizador: ");
+        String temporada = leer("Temporada (ej. 2026): ");
+        System.out.println("Deportes disponibles: " + nombresDeportes());
+        Deporte deporte = club.getServicioConjunto().getDeporte(leer("Deporte: ").toUpperCase());
+        if (deporte == null) {
+            throw new ReglaDeNegocioException("No existe ese deporte");
+        }
+        Categoria categoria = Categoria.valueOf(
+                leer("Categoria (SUB_13, SUB_15, SUB_17, MAYORES): ").toUpperCase());
+        Competencia competencia = club.getServicioCompetencias()
+                .registrarCompetencia(nombre, organizador, temporada, deporte, categoria);
+        System.out.println(">> Competencia registrada con id " + competencia.getId());
+    }
+
+    private void registrarRival() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        InstitucionRival rival = club.getServicioCompetencias()
+                .registrarRival(competencia, leer("Nombre de la institucion rival: "));
+        System.out.println(">> Rival " + rival.getNombre() + " registrado en " + competencia.getId());
+    }
+
+    private void inscribirEquipoEnCompetencia() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        Equipo equipo = pedirEquipo("Id del equipo: ");
+        List<Socio> nomina = new ArrayList<>();
+        for (String login : leer("Nomina (logins separados por coma): ").split(",")) {
+            if (!login.trim().isEmpty()) {
+                nomina.add(club.getSocio(login.trim()));
+            }
+        }
+        club.getServicioCompetencias().inscribirEquipo(competencia, equipo, nomina);
+        System.out.println(">> " + equipo.getNombre() + " inscrito en " + competencia.getId()
+                + " con " + nomina.size() + " jugadores");
+    }
+
+    private void registrarPartidoCompetencia() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        Equipo equipo = pedirEquipo("Id del equipo del club: ");
+        String rival = leer("Institucion rival: ");
+        int jornada = leerEntero("Jornada: ");
+        boolean local = leer("El club juega de local? (s/n): ").equalsIgnoreCase("s");
+        String escenario = leer("Escenario: ");
+        LocalDate fecha = LocalDate.parse(leer("Fecha (yyyy-MM-dd): "));
+        PartidoCompetencia partido = club.getServicioCompetencias()
+                .registrarPartido(competencia, equipo, rival, jornada, local, escenario, fecha);
+        System.out.println(">> Partido de competencia registrado: " + partido.getId()
+                + ". Registra las estadisticas (opcion 12) antes del resultado (opcion 18).");
+    }
+
+    private void registrarResultadoCompetencia() {
+        Partido partido = pedirPartidoCualquiera("Id del partido de competencia: ");
+        if (!(partido instanceof PartidoCompetencia)) {
+            throw new ReglaDeNegocioException("No existe el partido de competencia " + partido.getId());
+        }
+        int marcadorClub = leerEntero("Marcador del club: ");
+        int rival = leerEntero("Marcador del rival: ");
+        club.getServicioCompetencias().registrarResultado((PartidoCompetencia) partido, marcadorClub, rival);
+        System.out.println(">> Resultado registrado: club " + marcadorClub + " - rival " + rival);
+    }
+
+    /** HDU 8: tabla de posiciones de una competencia. */
+    private void verTablaPosiciones() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        List<FilaPosicion> filas = club.getServicioCompetencias().tablaPosiciones(competencia);
+        System.out.println("Tabla de " + competencia.getNombre() + " (" + competencia.getTemporada()
+                + ")  [* = equipo del club]");
+        System.out.printf("%-3s %-28s %3s %3s %3s %3s %4s %4s %4s %4s%n",
+                "#", "Equipo", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "Pts");
+        int puesto = 1;
+        for (FilaPosicion f : filas) {
+            System.out.printf("%-3d %-28s %3d %3d %3d %3d %4d %4d %4d %4d%n", puesto++,
+                    (f.esClub() ? "* " : "") + f.getNombre(), f.getJugados(), f.getGanados(),
+                    f.getEmpatados(), f.getPerdidos(), f.getGolesFavor(), f.getGolesContra(),
+                    f.getDiferencia(), f.getPuntos());
+        }
+    }
+
+    /** HDU 11: estadisticas individuales acumuladas de una competencia. */
+    private void verEstadisticasAcumuladas() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        List<AcumuladoJugador> lista = club.getServicioCompetencias().estadisticasAcumuladas(competencia);
+        if (lista.isEmpty()) {
+            System.out.println("Aun no hay estadisticas de partidos jugados en esta competencia.");
+            return;
+        }
+        String[] etiquetas = etiquetas(competencia.getDeporte());
+        for (AcumuladoJugador a : lista) {
+            System.out.println(" - " + a.getLogin() + ": " + a.getPartidos() + " partidos, "
+                    + a.getA() + " " + etiquetas[0] + ", " + a.getB() + " " + etiquetas[1]);
+        }
+    }
+
+    /** HDU 20: desempeno del jugador en una competencia y su posicion en las clasificaciones. */
+    private void verMiDesempenoCompetencia(Socio socio) {
+        ServicioCompetencias sc = club.getServicioCompetencias();
+        for (Competencia c : sc.getCompetencias()) {
+            System.out.println(" " + c.getId() + " | " + c.getNombre() + " | " + c.getTemporada());
+        }
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        if (!sc.participa(competencia, socio)) {
+            throw new ReglaDeNegocioException("No participas en esa competencia");
+        }
+        AcumuladoJugador acumulado = sc.acumuladoDe(competencia, socio);
+        if (acumulado == null) {
+            System.out.println("Participas en " + competencia.getNombre()
+                    + ", pero aun no tienes estadisticas registradas.");
+            return;
+        }
+        String[] etiquetas = etiquetas(competencia.getDeporte());
+        int[] posiciones = sc.posicionesDe(competencia, socio);
+        System.out.println(competencia.getNombre() + ": " + acumulado.getPartidos() + " partidos");
+        System.out.println(" - " + acumulado.getA() + " " + etiquetas[0]
+                + " (posicion " + posiciones[0] + " en la clasificacion de " + etiquetas[0] + ")");
+        System.out.println(" - " + acumulado.getB() + " " + etiquetas[1]
+                + " (posicion " + posiciones[1] + " en la clasificacion de " + etiquetas[1] + ")");
+    }
+
+    private void listarCompetencias() {
+        List<Competencia> competencias = club.getServicioCompetencias().getCompetencias();
+        if (competencias.isEmpty()) {
+            System.out.println("No hay competencias.");
+            return;
+        }
+        for (Competencia c : competencias) {
+            StringBuilder rivales = new StringBuilder();
+            for (InstitucionRival r : c.getRivales()) {
+                rivales.append(rivales.length() > 0 ? ", " : "").append(r.getNombre());
+            }
+            System.out.println(c.getId() + " | " + c.getNombre() + " | " + c.getOrganizador()
+                    + " | " + c.getTemporada() + " | " + c.getDeporte().getNombre()
+                    + " | " + c.getCategoria() + " | equipos inscritos: " + c.getInscripciones().size()
+                    + " | rivales: " + (rivales.length() == 0 ? "ninguno" : rivales));
+            for (InscripcionCompetencia i : c.getInscripciones()) {
+                StringBuilder nomina = new StringBuilder();
+                for (Socio s : i.getNomina()) {
+                    nomina.append(nomina.length() > 0 ? ", " : "").append(s.getLogin());
+                }
+                System.out.println("     " + i.getEquipo().getNombre() + " | nomina (" + i.getNomina().size()
+                        + "): " + nomina);
+            }
+        }
+    }
+
+    private String[] etiquetas(Deporte deporte) {
+        switch (deporte.getNombre().toUpperCase()) {
+            case "FUTBOL":
+                return new String[] { "goles", "asistencias" };
+            case "BASKET":
+                return new String[] { "puntos", "rebotes" };
+            case "VOLEIBOL":
+                return new String[] { "aces", "bloqueos" };
+            default:
+                return new String[] { "campo 1", "campo 2" };
+        }
+    }
+
+    private Competencia pedirCompetencia(String mensaje) {
+        String id = leer(mensaje).toUpperCase();
+        Competencia competencia = club.getServicioCompetencias().getCompetencia(id);
+        if (competencia == null) {
+            throw new ReglaDeNegocioException("No existe la competencia " + id);
+        }
+        return competencia;
+    }
+
+    private Partido pedirPartidoCualquiera(String mensaje) {
+        String id = leer(mensaje).toUpperCase();
+        Partido partido = club.getServicioPartidos().getPartido(id);
+        if (partido == null) {
+            throw new ReglaDeNegocioException("No existe el partido " + id);
+        }
+        return partido;
     }
 
     // --------------------------------------------------------------- ayudas

@@ -7,6 +7,7 @@ import java.util.List;
 import club.modelo.conjunto.Equipo;
 import club.modelo.conjunto.IntegranteEquipo;
 import club.modelo.conjunto.Partido;
+import club.modelo.conjunto.PartidoCompetencia;
 import club.modelo.conjunto.PartidoInterno;
 import club.modelo.conjunto.TipoTarjeta;
 import club.modelo.usuarios.Socio;
@@ -19,6 +20,7 @@ public class ServicioPartidos {
 
     private final List<Partido> partidos;
     private int contadorPartidos;
+    private int contadorCompetencia;
 
 
     public ServicioPartidos() {
@@ -223,12 +225,30 @@ public class ServicioPartidos {
         }
 
         partidos.add(partido);
-        if (numero > contadorPartidos) {
+        if (partido instanceof PartidoCompetencia) {
+            if (numero > contadorCompetencia) {
+                contadorCompetencia = numero;
+            }
+        } else if (numero > contadorPartidos) {
             contadorPartidos = numero;
         }
     }
+
+    /** Id que tendra el proximo partido de competencia (PC-001...). No consume el contador. */
+    public String generarIdPartidoCompetencia() {
+        return String.format("PC-%03d", contadorCompetencia + 1);
+    }
+
+    /** Registra un partido de competencia nuevo; aqui si se consume el contador de ids. */
+    public void agregarPartidoCompetencia(PartidoCompetencia partido) {
+        if (partido == null) {
+            throw new ReglaDeNegocioException("El partido no puede ser nulo");
+        }
+        partidos.add(partido);
+        contadorCompetencia++;
+    }
     public void registrarEstadisticaFutbol(
-            PartidoInterno partido,
+            Partido partido,
             Socio socio,
             int goles,
             int asistencias) {
@@ -245,13 +265,14 @@ public class ServicioPartidos {
             );
         }
 
-        int amarillas = partido.getAmarillasPartido(
-            socio.getLogin()
-        );
-
-        boolean roja = partido.recibioRojaPartido(
-            socio.getLogin()
-        );
+        // Las tarjetas solo se registran en partidos internos; en competencia quedan en 0
+        int amarillas = 0;
+        boolean roja = false;
+        if (partido instanceof PartidoInterno) {
+            PartidoInterno interno = (PartidoInterno) partido;
+            amarillas = interno.getAmarillasPartido(socio.getLogin());
+            roja = interno.recibioRojaPartido(socio.getLogin());
+        }
 
         EstadisticaFutbol estadistica = new EstadisticaFutbol(
             socio,
@@ -265,7 +286,7 @@ public class ServicioPartidos {
     }
     
     public void registrarEstadisticaBasket(
-            PartidoInterno partido,
+            Partido partido,
             Socio socio,
             int puntos,
             int rebotes) {
@@ -291,7 +312,7 @@ public class ServicioPartidos {
         partido.agregarEstadistica(estadistica);
     }
     public void registrarEstadisticaVoleibol(
-            PartidoInterno partido,
+            Partido partido,
             Socio socio,
             int aces,
             int bloqueos) {
@@ -316,5 +337,4 @@ public class ServicioPartidos {
 
         partido.agregarEstadistica(estadistica);
     }
-
 }
