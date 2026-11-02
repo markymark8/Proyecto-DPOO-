@@ -1,3 +1,5 @@
 idPartido;loginSocio;tipo;a;b;amarillas;roja
 PT-002;jug02;FUTBOL;1;0;0;false
 PT-002;jug15;FUTBOL;2;1;0;false
+PC-001;jug12;FUTBOL;0;1;0;false
+PC-002;jug12;FUTBOL;0;0;0;false
