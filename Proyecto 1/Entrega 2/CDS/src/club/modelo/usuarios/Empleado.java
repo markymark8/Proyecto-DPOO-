@@ -32,15 +32,20 @@ public class Empleado extends Usuario implements Comprador {
     public void setCodigoDescuento(String codigoDescuento) {
         this.codigoDescuento = codigoDescuento;
     }
-
+    
     @Override
     public int getPuntosFidelidad() {
         return puntosFidelidad;
     }
 
-    public void setPuntosFidelidad(int puntosFidelidad) {
-        this.puntosFidelidad = puntosFidelidad;
+public void setPuntosFidelidad(int puntosFidelidad) {
+    if (puntosFidelidad < 0) {
+        throw new ReglaDeNegocioException(
+            "Los puntos de fidelidad no pueden ser negativos");
     }
+
+    this.puntosFidelidad = puntosFidelidad;
+}
 
     public Socio getSocio() {
         return socio;

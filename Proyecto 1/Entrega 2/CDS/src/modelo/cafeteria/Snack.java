@@ -9,6 +9,8 @@ public class Snack extends ProductoCafeteria {
 		this.alergenos = alergenos;
 	}
 	
-	
+	public String getAlergenos() {
+	    return alergenos;
+	}
 
 }

@@ -9,6 +9,15 @@ public class Bebida extends ProductoCafeteria {
 		this.temperatura = temperatura;
 	}
 	
+
+	public String getTemperatura() {
+    return temperatura;
+}
+
+	public boolean esCaliente() {
+    return temperatura != null &&
+           temperatura.equalsIgnoreCase("Caliente");
+}
 	
 
 }

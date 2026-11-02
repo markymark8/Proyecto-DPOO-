@@ -38,6 +38,12 @@ public class Turno {
 	    if (nuevaHoraInicio == null || nuevaHoraFinal == null) {
 	        throw new ReglaDeNegocioException("Las horas no pueden ser nulas");
 	    }
+	    
+	    if (nuevaHoraInicio.compareTo(nuevaHoraFinal) >= 0) {
+	        throw new ReglaDeNegocioException(
+	            "La hora de inicio debe ser anterior a la hora final"
+	        );
+	    }
 
 	    this.fecha = nuevaFecha;
 	    this.horaInicio = nuevaHoraInicio;

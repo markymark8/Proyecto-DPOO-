@@ -1,5 +1,7 @@
 package modelo.tienda;
 
+import club.servicios.ReglaDeNegocioException;
+
 public class Articulo {
 	
 	private String nombre;
@@ -11,8 +13,8 @@ public class Articulo {
 		super();
 		this.nombre = nombre;
 		this.categoria = categoria;
-		this.precio = precio;
-		this.cantidadDisponible = cantidadDisponible;
+		this.setPrecio(precio);
+		this.setCantidadDisponible(cantidadDisponible);
 	}
 
 	public String getNombre() {
@@ -36,9 +38,12 @@ public class Articulo {
 	}
 
 	public void setPrecio(double precio) {
-	    if (precio >= 0) {
-	        this.precio = precio;
+	    if (!Double.isFinite(precio) || precio < 0) {
+	        throw new ReglaDeNegocioException(
+	            "El precio debe ser un valor valido y no negativo");
 	    }
+
+	    this.precio = precio;
 	}
 
 	public int getCantidadDisponible() {
@@ -46,7 +51,12 @@ public class Articulo {
 	}
 	
 	public void setCantidadDisponible(int cantidadDisponible) {
-		this.cantidadDisponible = cantidadDisponible;
+	    if (cantidadDisponible < 0) {
+	        throw new ReglaDeNegocioException(
+	            "La cantidad disponible no puede ser negativa");
+	    }
+
+	    this.cantidadDisponible = cantidadDisponible;
 	}
 	
 	

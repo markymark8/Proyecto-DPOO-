@@ -67,30 +67,30 @@ public class Administrador extends Usuario {
         cambio.setEstado("Rechazado");
     }
     
-    public void aprobarCambioTurno(cambioTurno cambio,
-            ArrayList<Empleado> empleados) {
 
-        if (cambio == null) {
-            throw new ReglaDeNegocioException(
-                "El cambio de turno no puede ser nulo");
-        }
+public void aprobarCambioTurno(cambioTurno cambio,
+        ArrayList<Empleado> empleados) {
 
-        if (!cambiosTurno.contains(cambio)) {
-            throw new ReglaDeNegocioException(
-                "El cambio de turno no está registrado");
-        }
+    if (cambio == null) {
+        throw new ReglaDeNegocioException(
+            "El cambio de turno no puede ser nulo");
+    }
 
-        if (!cambio.getEstado().equals("Pendiente")) {
-            throw new ReglaDeNegocioException(
-                "Solo se pueden aprobar solicitudes pendientes");
-        }
+    if (!cambiosTurno.contains(cambio)) {
+        throw new ReglaDeNegocioException(
+            "El cambio de turno no está registrado");
+    }
 
-        if (empleados == null) {
-            throw new ReglaDeNegocioException(
-                "La lista de empleados no puede ser nula");
-        }
-    
-    
+    if (!cambio.getEstado().equals("Pendiente")) {
+        throw new ReglaDeNegocioException(
+            "Solo se pueden aprobar solicitudes pendientes");
+    }
+
+    if (empleados == null) {
+        throw new ReglaDeNegocioException(
+            "La lista de empleados no puede ser nula");
+    }
+
     Turno turnoOriginal = cambio.getTurno();
 
     if (turnoOriginal == null) {
@@ -98,13 +98,11 @@ public class Administrador extends Usuario {
             "El turno original no puede ser nulo");
     }
 
-    
     Empleado empleadoSolicitante = null;
 
     for (Empleado empleado : empleados) {
         if (empleadoSolicitante == null &&
             empleado.getTurnos().contains(turnoOriginal)) {
-
             empleadoSolicitante = empleado;
         }
     }
@@ -114,12 +112,6 @@ public class Administrador extends Usuario {
             "No se encontró al empleado responsable del turno");
     }
 
-    
-    boolean esEntrenador = empleadoSolicitante.getTipoEmpleado().equals("Entrenador");
-
-    boolean esFisioterapeuta = empleadoSolicitante.getTipoEmpleado().equals("Fisioterapeuta");
-
-    
     Date fechaOriginal = turnoOriginal.getFecha();
     String horaInicioOriginal = turnoOriginal.getHoraInicio();
     String horaFinalOriginal = turnoOriginal.getHoraFinal();
@@ -127,104 +119,109 @@ public class Administrador extends Usuario {
     Date nuevaFecha = cambio.getNuevaFecha();
     String nuevaHoraInicio = cambio.getNuevaHoraInicio();
     String nuevaHoraFinal = cambio.getNuevaHoraFinal();
-   
-    int entrenadores = contarEmpleados(
-    	    empleados, fechaOriginal, horaInicioOriginal, "Entrenador");
 
-    int fisioterapeutas = contarEmpleados(
-    	    empleados, fechaOriginal, horaInicioOriginal, "Fisioterapeuta");
-    
+    if (nuevaFecha == null ||
+        nuevaHoraInicio == null ||
+        nuevaHoraFinal == null) {
+        throw new ReglaDeNegocioException(
+            "Los datos del nuevo turno no pueden ser nulos");
+    }
 
-    if (horaInicioOriginal.equals(nuevaHoraInicio) &&
-    	    horaFinalOriginal.equals(nuevaHoraFinal) &&
-    	    fechaOriginal.equals(nuevaFecha)) {
-
-    	    throw new ReglaDeNegocioException(
-    	        "El nuevo turno debe ser diferente al original");
-    	}
-
+    if (fechaOriginal.equals(nuevaFecha) &&
+        horaInicioOriginal.equals(nuevaHoraInicio) &&
+        horaFinalOriginal.equals(nuevaHoraFinal)) {
+        throw new ReglaDeNegocioException(
+            "El nuevo turno debe ser diferente al original");
+    }
 
     if (nuevaHoraInicio.compareTo(nuevaHoraFinal) >= 0) {
         throw new ReglaDeNegocioException(
             "La hora de inicio debe ser anterior a la hora final");
     }
 
-    boolean cubreHoraOriginal =
-    	    fechaOriginal.equals(nuevaFecha) &&
-    	    nuevaHoraInicio.compareTo(horaInicioOriginal) <= 0 &&
-    	    nuevaHoraFinal.compareTo(horaInicioOriginal) > 0;
-
-    	if (!cubreHoraOriginal) {
-
-    		if (esEntrenador && entrenadores <= 2) {
-    	        throw new ReglaDeNegocioException(
-    	            "No se puede aprobar el cambio porque quedaría sin entrenador");
-    	    }
-
-    	    if (esFisioterapeuta && fisioterapeutas <= 2) {
-    	        throw new ReglaDeNegocioException(
-    	            "No se puede aprobar el cambio porque quedaría sin fisioterapeuta");
-    	    }
-    	}
     
+    ArrayList<String> horas = new ArrayList<>();
 
+    horas.add(horaInicioOriginal);
+    horas.add(horaFinalOriginal);
+
+    if (fechaOriginal.equals(nuevaFecha)) {
+        horas.add(nuevaHoraInicio);
+        horas.add(nuevaHoraFinal);
     }
+
+    for (Empleado empleado : empleados) {
+        for (Turno turno : empleado.getTurnos()) {
+            if (turno.getFecha().equals(fechaOriginal)) {
+                horas.add(turno.getHoraInicio());
+                horas.add(turno.getHoraFinal());
+            }
+        }
+    }
+
+    java.util.Collections.sort(horas);
+
     
-    
-    private int contarEmpleados(
-            ArrayList<Empleado> empleados,
-            Date fecha,
-            String hora,
-            String tipoEmpleado) {
+    for (int i = 0; i < horas.size() - 1; i++) {
 
-        int cantidad = 0;
+        String hora = horas.get(i);
+        String siguienteHora = horas.get(i + 1);
 
-        for (Empleado empleado : empleados) {
+        if (!hora.equals(siguienteHora) &&
+            hora.compareTo(horaFinalOriginal) < 0 &&
+            siguienteHora.compareTo(horaInicioOriginal) > 0) {
 
-            boolean estaTrabajando = false;
+            int entrenadores = 0;
+            int fisioterapeutas = 0;
 
-            for (Turno turno : empleado.getTurnos()) {
+            for (Empleado empleado : empleados) {
 
-                if (turno.getFecha().equals(fecha) &&
-                    turno.getHoraInicio().compareTo(hora) <= 0 &&
-                    turno.getHoraFinal().compareTo(hora) > 0) {
+                boolean trabajando = false;
 
-                    estaTrabajando = true;
+                for (Turno turno : empleado.getTurnos()) {
+
+                    if (turno != turnoOriginal &&
+                        turno.getFecha().equals(fechaOriginal) &&
+                        turno.getHoraInicio().compareTo(hora) <= 0 &&
+                        turno.getHoraFinal().compareTo(hora) > 0) {
+                        trabajando = true;
+                    }
+                }
+
+                // Considerar el nuevo horario del solicitante
+                if (empleado == empleadoSolicitante &&
+                    nuevaFecha.equals(fechaOriginal) &&
+                    nuevaHoraInicio.compareTo(hora) <= 0 &&
+                    nuevaHoraFinal.compareTo(hora) > 0) {
+                    trabajando = true;
+                }
+
+                if (trabajando) {
+                    if (empleado.getTipoEmpleado().equals("Entrenador")) {
+                        entrenadores++;
+                    }
+
+                    if (empleado.getTipoEmpleado().equals("Fisioterapeuta")) {
+                        fisioterapeutas++;
+                    }
                 }
             }
 
-            if (estaTrabajando &&
-                empleado.getTipoEmpleado().equals(tipoEmpleado)) {
-
-                cantidad++;
-            }
-        }
-
-        return cantidad;
-    }
-    
-    private void validarCobertura(
-            ArrayList<Empleado> empleados,
-            Date fecha,
-            String horaInicio,
-            String horaFinal) {
-
-        String hora = horaInicio;
-
-        while (hora.compareTo(horaFinal) < 0) {
-
-            int entrenadores = contarEmpleados(
-                empleados, fecha, hora, "Entrenador");
-
-            int fisioterapeutas = contarEmpleados(
-                empleados, fecha, hora, "Fisioterapeuta");
-
             if (entrenadores < 2 || fisioterapeutas < 1) {
                 throw new ReglaDeNegocioException(
-                    "No se cumple la cobertura minima de empleados");
+                    "No se puede aprobar el cambio porque no se cumple "
+                    + "la cobertura mínima de 2 entrenadores "
+                    + "y 1 fisioterapeuta");
             }
-
-            // Aquí falta avanzar a la siguiente hora.
         }
     }
+    turnoOriginal.actualizarHorario(
+        nuevaFecha,
+        nuevaHoraInicio,
+        nuevaHoraFinal
+    );
+
+    cambio.setEstado("Aprobado");
+    }
 }
+
