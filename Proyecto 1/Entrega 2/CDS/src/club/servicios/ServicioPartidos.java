@@ -10,8 +10,11 @@ import club.modelo.conjunto.Partido;
 import club.modelo.conjunto.PartidoInterno;
 import club.modelo.conjunto.TipoTarjeta;
 import club.modelo.usuarios.Socio;
+import club.modelo.conjunto.EstadisticaFutbol;
+import club.modelo.conjunto.EstadisticaBasket;
+import club.modelo.conjunto.EstadisticaVoleibol;
 
-// PROGRAMAR PARTIDOS INTERNOS, REGISTRA TARJETAS Y CIERRA PARTIDOS CON LOS RESULTADOS 
+// PROGRAMAR PARTIDOS INTERNOS, REGISTRA TARJETAS, ESTADISTICAS Y CIERRA PARTIDOS CON LOS RESULTADOS 
 public class ServicioPartidos {
 
     private final List<Partido> partidos;
@@ -132,12 +135,15 @@ public class ServicioPartidos {
         }
         switch (tipo) {
 
-            case AMARILLA:
-                integranteEncontrado.registrarAmarilla();
-                break;
+        	case AMARILLA:
+        		integranteEncontrado.registrarAmarilla();
+        		partido.registrarAmarillaPartido(
+                integranteEncontrado.getSocio().getLogin());
+        		break;
 
             case ROJA:
                 integranteEncontrado.registrarRoja();
+                partido.registrarRojaPartido(integranteEncontrado.getSocio().getLogin());
                 break;
 
             default:
@@ -158,6 +164,11 @@ public class ServicioPartidos {
                 "El partido no puede ser nulo."
             );
         }
+    	if (partido.estaJugado()) {
+            throw new ReglaDeNegocioException(
+                    "El partido ya fue jugado"
+                );
+            }
 
         List<IntegranteEquipo> suspendidos = new ArrayList<>();
 
@@ -175,9 +186,10 @@ public class ServicioPartidos {
         for (IntegranteEquipo integrante :
                 partido.getVisitante().getIntegrantesActivos()) {
 
-            if (integrante.isSuspendidoInterno()
-                    && !partido.fueSancionado(
-                        integrante.getSocio().getLogin())) {
+        	if (partido.getDeporte().usaTarjetas()
+        	        && integrante.isSuspendidoInterno()
+        	        && !partido.fueSancionado(
+        	            integrante.getSocio().getLogin())) {
 
                 suspendidos.add(integrante);
             }
@@ -209,4 +221,94 @@ public class ServicioPartidos {
             contadorPartidos = numero;
         }
     }
+    public void registrarEstadisticaFutbol(
+            PartidoInterno partido,
+            Socio socio,
+            int goles,
+            int asistencias) {
+
+        if (partido == null || socio == null) {
+            throw new ReglaDeNegocioException(
+                "El partido y el jugador son obligatorios"
+            );
+        }
+
+        if (!partido.getDeporte().getNombre().equalsIgnoreCase("FUTBOL")) {
+            throw new ReglaDeNegocioException(
+                "Este método solo funciona para partidos de fútbol"
+            );
+        }
+
+        int amarillas = partido.getAmarillasPartido(
+            socio.getLogin()
+        );
+
+        boolean roja = partido.recibioRojaPartido(
+            socio.getLogin()
+        );
+
+        EstadisticaFutbol estadistica = new EstadisticaFutbol(
+            socio,
+            goles,
+            asistencias,
+            amarillas,
+            roja
+        );
+
+        partido.agregarEstadistica(estadistica);
+    }
+    
+    public void registrarEstadisticaBasket(
+            PartidoInterno partido,
+            Socio socio,
+            int puntos,
+            int rebotes) {
+
+        if (partido == null || socio == null) {
+            throw new ReglaDeNegocioException(
+                "El partido y el jugador son obligatorios"
+            );
+        }
+
+        if (!partido.getDeporte().getNombre().equalsIgnoreCase("BASKET")) {
+            throw new ReglaDeNegocioException(
+                "Este método solo funciona para partidos de basket"
+            );
+        }
+
+        EstadisticaBasket estadistica = new EstadisticaBasket(
+            socio,
+            puntos,
+            rebotes
+        );
+
+        partido.agregarEstadistica(estadistica);
+    }
+    public void registrarEstadisticaVoleibol(
+            PartidoInterno partido,
+            Socio socio,
+            int aces,
+            int bloqueos) {
+
+        if (partido == null || socio == null) {
+            throw new ReglaDeNegocioException(
+                "El partido y el jugador son obligatorios"
+            );
+        }
+
+        if (!partido.getDeporte().getNombre().equalsIgnoreCase("VOLEIBOL")) {
+            throw new ReglaDeNegocioException(
+                "Este método solo funciona para partidos de voleibol"
+            );
+        }
+
+        EstadisticaVoleibol estadistica = new EstadisticaVoleibol(
+            socio,
+            aces,
+            bloqueos
+        );
+
+        partido.agregarEstadistica(estadistica);
+    }
+
 }

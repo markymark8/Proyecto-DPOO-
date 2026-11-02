@@ -3,6 +3,7 @@ package club.modelo.conjunto;
 import java.time.LocalDate;
 
 import club.servicios.ReglaDeNegocioException;
+import club.modelo.usuarios.Socio;
 
 /**
  * Partido que pertenece a una competencia (liga). Extiende Partido igual que PartidoInterno.
@@ -71,4 +72,24 @@ public class PartidoCompetencia extends Partido {
             throw new ReglaDeNegocioException("Los equipos deben ser de la misma categoría");
         }
     }
+    @Override
+    protected boolean participaJugador(Socio socio) {
+
+        if (socio == null) {
+            return false;
+        }
+        for (IntegranteEquipo integrante : local.getIntegrantesActivos()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                return true;
+            }
+        }
+        for (IntegranteEquipo integrante : visitante.getIntegrantesActivos()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
 }
