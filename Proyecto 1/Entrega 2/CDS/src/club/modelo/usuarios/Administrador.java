@@ -138,6 +138,25 @@ public void aprobarCambioTurno(cambioTurno cambio,
         throw new ReglaDeNegocioException(
             "La hora de inicio debe ser anterior a la hora final");
     }
+    
+
+for (Turno turno : empleadoSolicitante.getTurnos()) {
+
+    if (turno != turnoOriginal &&
+        turno.getFecha().equals(nuevaFecha)) {
+
+        boolean hayCruce =
+            nuevaHoraInicio.compareTo(turno.getHoraFinal()) < 0 &&
+            nuevaHoraFinal.compareTo(turno.getHoraInicio()) > 0;
+
+        if (hayCruce) {
+            throw new ReglaDeNegocioException(
+                "El empleado ya tiene un turno asignado "
+                + "en ese horario");
+        }
+    }
+}
+
 
     
     ArrayList<String> horas = new ArrayList<>();

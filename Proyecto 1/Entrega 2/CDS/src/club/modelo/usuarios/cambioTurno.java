@@ -22,17 +22,40 @@ public class cambioTurno {
 	    this.nuevaHoraFinal = nuevaHoraFinal;
 	}
 	
+
+	public void setEstado(String estado) {
+
+    if (estado == null) {
+        throw new IllegalArgumentException(
+            "El estado no puede ser nulo");
+    }
+
+    if (!this.estado.equals("Pendiente")) {
+        throw new IllegalStateException(
+            "La solicitud ya fue procesada");
+    }
+
+    if (!estado.equals("Aprobado") &&
+        !estado.equals("Rechazado")) {
+        throw new IllegalArgumentException(
+            "El estado debe ser Aprobado o Rechazado");
+    }
+
+    this.estado = estado;
+}
+	
 	public String getEstado() {
 	    return estado;
 	}
 
-	public void setEstado(String estado) {
-	    this.estado = estado;
+	public Administrador getAdministrador() {
+	    return administrador;
 	}
-	
 	public Turno getTurno() {
 	    return turno;
 	}
+	
+	
 	
 	public Date getNuevaFecha() {
 	    return nuevaFecha;
