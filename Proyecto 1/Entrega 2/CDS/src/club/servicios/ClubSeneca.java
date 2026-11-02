@@ -7,6 +7,8 @@ import java.util.Map;
 import club.modelo.usuarios.Socio;
 import club.modelo.usuarios.Usuario;
 import club.servicios.ReglaDeNegocioException;
+import club.persistencia.RepositorioConjunto;
+import club.persistencia.RepositorioPartidos;
 
 
 
@@ -58,11 +60,13 @@ public class ClubSeneca {
 
     /** TODO: orden de carga: usuarios, modulo de Marco, modulo de Daniel, comercio. */
     public void cargar(Path carpetaDatos) {
-        // TODO
+    	 RepositorioConjunto.cargar(carpetaDatos, this);
+         RepositorioPartidos.cargar(carpetaDatos, this);   
     }
 
     /** TODO: cada modulo guarda sus propios archivos. */
     public void guardar(Path carpetaDatos) {
-        // TODO
+    	RepositorioConjunto.guardar(carpetaDatos, this);
+        RepositorioPartidos.guardar(carpetaDatos, this);
     }
 }
