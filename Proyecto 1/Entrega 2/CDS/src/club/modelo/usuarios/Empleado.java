@@ -45,6 +45,10 @@ public class Empleado extends Usuario implements Comprador {
     public Socio getSocio() {
         return socio;
     }
+    
+    public String getTipoEmpleado() {
+        return "Empleado";
+    }
 
 
     public void vincularSocio(Socio socio) {
@@ -78,5 +82,69 @@ if (puntos < 0) {
     	}
     	
     	puntosFidelidad -= puntos;
+    }
+    
+    public ArrayList<Turno> getTurnos() {
+        return turnos;
+    }
+    
+    public void agregarTurno(Turno turno) {
+        if (turno == null) {
+            throw new ReglaDeNegocioException("El turno no puede ser nulo");
+        }
+
+        if (turnos.contains(turno)) {
+            throw new ReglaDeNegocioException("El turno ya está registrado");
+        }
+
+        this.turnos.add(turno);
+    }
+    
+    public ArrayList<SugerenciaProducto> getSugerenciasProducto() {
+        return sugerenciasProducto;
+    }
+    
+    public void agregarSugerenciaProducto(SugerenciaProducto sugerencia) {
+        if (sugerencia == null) {
+            throw new ReglaDeNegocioException("La sugerencia no puede ser nula");
+        }
+
+        if (sugerenciasProducto.contains(sugerencia)) {
+            throw new ReglaDeNegocioException("La sugerencia ya está registrada");
+        }
+
+        this.sugerenciasProducto.add(sugerencia);
+    }
+    
+    public ArrayList<cambioTurno> getCambiosTurno() {
+        return cambiosTurno;
+    }
+    
+    public void agregarCambioTurno(cambioTurno cambio) {
+        if (cambio == null) {
+            throw new ReglaDeNegocioException("El cambio de turno no puede ser nulo");
+        }
+
+        if (cambiosTurno.contains(cambio)) {
+            throw new ReglaDeNegocioException("El cambio de turno ya está registrado");
+        }
+
+        this.cambiosTurno.add(cambio);
+    }
+    
+    public ArrayList<venta> getVentas() {
+        return ventas;
+    }
+    
+    public void agregarVenta(venta nuevaVenta) {
+        if (nuevaVenta == null) {
+            throw new ReglaDeNegocioException("La venta no puede ser nula");
+        }
+
+        if (ventas.contains(nuevaVenta)) {
+            throw new ReglaDeNegocioException("La venta ya está registrada");
+        }
+
+        this.ventas.add(nuevaVenta);
     }
 }

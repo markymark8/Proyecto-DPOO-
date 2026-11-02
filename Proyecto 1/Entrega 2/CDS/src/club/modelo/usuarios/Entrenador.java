@@ -1,6 +1,6 @@
 package club.modelo.usuarios;
 
-/** Empleado que planea y dicta sesiones de entrenamiento. */
+
 public class Entrenador extends Empleado {
 
     private int codigo;
@@ -17,5 +17,10 @@ public class Entrenador extends Empleado {
 
     public void setCodigo(int codigo) {
         this.codigo = codigo;
+    }
+    
+    @Override
+    public String getTipoEmpleado() {
+        return "Entrenador";
     }
 }

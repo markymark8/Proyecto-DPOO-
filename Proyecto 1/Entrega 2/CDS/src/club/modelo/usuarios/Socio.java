@@ -102,4 +102,21 @@ public class Socio extends Usuario implements Comprador {
     	puntosFidelidad -= puntos;
        
     }
+    
+    public ArrayList<venta> getVentas() {
+        return ventas;
+    }
+    
+    public void agregarVenta(venta nuevaVenta) {
+        if (nuevaVenta == null) {
+            throw new ReglaDeNegocioException("La venta no puede ser nula");
+        }
+
+        if (ventas.contains(nuevaVenta)) {
+            throw new ReglaDeNegocioException("La venta ya está registrada");
+        }
+
+        this.ventas.add(nuevaVenta);
+    }
+    
 }
