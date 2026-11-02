@@ -1,14 +1,14 @@
 package club.persistencia;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.List; 
 
-/**
- * Utilidad comun de persistencia en CSV, usada por los tres modulos.
- *
- * Convencion: columnas separadas por ';', listas dentro de una celda separadas por ',',
- * UTF-8, primera fila de encabezado, fechas yyyy-MM-dd, horas HH:mm, booleanos true/false.
- */
 public class Csv {
 
     public static final String SEPARADOR = ";";
@@ -17,19 +17,36 @@ public class Csv {
     private Csv() {
     }
 
-    /**
-     * TODO (a mano): leer el archivo (UTF-8) y devolver las filas ya separadas por ';'.
-     * Debe omitir la fila de encabezado y las lineas vacias.
-     */
     public static List<String[]> leer(Path archivo) {
-        throw new UnsupportedOperationException("TODO: Csv.leer");
+        List<String[]> filas = new ArrayList<>();
+        if (!Files.exists(archivo)) {
+            return filas;
+        }
+        try (BufferedReader lector = Files.newBufferedReader(archivo, StandardCharsets.UTF_8)) {
+            String linea = lector.readLine();
+            while ((linea = lector.readLine()) != null) {
+                if (!linea.isBlank()) {
+                    filas.add(linea.split(";", -1));
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo leer " + archivo, e);
+        }
+        return filas;
     }
 
-    /**
-     * TODO (a mano): escribir el encabezado y luego cada fila unida con ';' (UTF-8).
-     * Debe crear el archivo si no existe y sobrescribirlo si existe.
-     */
     public static void escribir(Path archivo, String[] encabezado, List<String[]> filas) {
-        throw new UnsupportedOperationException("TODO: Csv.escribir");
+    	try {
+            Files.createDirectories(archivo.getParent());
+            try (BufferedWriter w = Files.newBufferedWriter(archivo, StandardCharsets.UTF_8)) {
+                w.write(String.join(SEPARADOR, encabezado));
+                w.newLine();
+                for (String[] fila : filas) {
+                    w.write(String.join(SEPARADOR, fila));
+                    w.newLine();
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo escribir " + archivo, e);
     }
-}
+}}

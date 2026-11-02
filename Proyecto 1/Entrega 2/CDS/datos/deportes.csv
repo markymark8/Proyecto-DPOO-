@@ -1,0 +1,4 @@
+nombre;minJugadores;puntosVictoria;puntosEmpate;puntosDerrota;permiteEmpate;partidoPorSets;usaTarjetas
+FUTBOL;7;3;1;0;true;false;true
+BASKET;5;2;0;0;false;false;false
+VOLEIBOL;6;3;0;0;false;true;false

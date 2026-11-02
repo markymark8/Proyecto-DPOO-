@@ -115,10 +115,21 @@ public class PruebaBase {
         verificar("Buscar admin", club.buscarUsuario("admin") == admin);
         verificar("Usuario inexistente devuelve null", club.buscarUsuario("nadie") == null);
         verificar("Login recuperado coincide", club.buscarUsuario("ana").getLogin().equals("ana"));
+        verificar("Login recuperado coincide", club.buscarUsuario("ana").getLogin().equals("ana"));
+
+        System.out.println("=== ClubSeneca: getSocio ===");
+        club.registrarUsuario(luis);
+        verificar("getSocio devuelve el socio registrado", club.getSocio("ana") == ana);
+        verificar("getSocio devuelve a luis", club.getSocio("luis") == luis);
+        debeRechazar("getSocio de un administrador", () -> club.getSocio("admin"));
+        debeRechazar("getSocio de un entrenador (no es Socio)", () -> club.getSocio("carlos"));
+        debeRechazar("getSocio de un login inexistente", () -> club.getSocio("noexiste"));
+        
 
         System.out.println();
         System.out.println(fallas == 0 ? "TODO OK" : "HAY " + fallas + " FALLA(S): revisa las lineas marcadas");
         System.out.println();
         System.out.println("Hash de 1234 (para usuarios.csv): " + Usuario.hash("1234"));
     }
+    
 }

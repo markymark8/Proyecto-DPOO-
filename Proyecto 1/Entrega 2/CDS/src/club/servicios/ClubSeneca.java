@@ -6,42 +6,67 @@ import java.util.Map;
 
 import club.modelo.usuarios.Socio;
 import club.modelo.usuarios.Usuario;
+import club.servicios.ReglaDeNegocioException;
+import club.persistencia.RepositorioConjunto;
+import club.persistencia.RepositorioPartidos;
 
-/**
- * Raiz del sistema: une los tres modulos, carga y guarda todo desde la carpeta de datos.
- *
- * Por ahora solo conoce a los usuarios. Cada integrante agrega aqui su servicio
- * (ServicioConjunto, ServicioRaqueta, ...) cuando exista y compile.
- */
+
+
 public class ClubSeneca {
 
-    private final Map<String, Usuario> usuarios; // por login
+    private final Map<String, Usuario> usuarios;
+    private final ServicioConjunto servicioConjunto;
+    private final ServicioPartidos servicioPartidos;
 
     public ClubSeneca() {
         this.usuarios = new HashMap<>();
+        this.servicioConjunto = new ServicioConjunto();
+        this.servicioPartidos = new ServicioPartidos();
     }
 
     public void registrarUsuario(Usuario usuario) {
         usuarios.put(usuario.getLogin(), usuario);
     }
 
-    /** Devuelve el usuario con ese login, o null si no existe. */
     public Usuario buscarUsuario(String login) {
         return usuarios.get(login);
     }
-
-    /** TODO (a mano): devolver el Socio con ese login; si no existe o no es Socio, lanzar ReglaDeNegocioException. */
-    public Socio getSocio(String login) {
-        throw new UnsupportedOperationException("TODO: getSocio");
+    public ServicioConjunto getServicioConjunto() {       
+        return servicioConjunto;                            
+    }         
+    public ServicioPartidos getServicioPartidos() {
+        return servicioPartidos;
     }
+
+    public Socio getSocio(String login) {
+
+        Usuario usuario = buscarUsuario(login);
+
+        if (usuario == null) {
+            throw new ReglaDeNegocioException(
+                "No existe el usuario " + login
+            );
+        }
+
+        if (!(usuario instanceof Socio)) {
+            throw new ReglaDeNegocioException(
+                "El usuario " + login + " no es un socio"
+            );
+        }
+
+        return (Socio) usuario;
+    }
+    
 
     /** TODO: orden de carga: usuarios, modulo de Marco, modulo de Daniel, comercio. */
     public void cargar(Path carpetaDatos) {
-        // TODO
+    	 RepositorioConjunto.cargar(carpetaDatos, this);
+         RepositorioPartidos.cargar(carpetaDatos, this);   
     }
 
     /** TODO: cada modulo guarda sus propios archivos. */
     public void guardar(Path carpetaDatos) {
-        // TODO
+    	RepositorioConjunto.guardar(carpetaDatos, this);
+        RepositorioPartidos.guardar(carpetaDatos, this);
     }
 }
