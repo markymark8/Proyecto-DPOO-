@@ -7,6 +7,7 @@ import java.util.Map;
 import club.modelo.usuarios.Socio;
 import club.modelo.usuarios.Usuario;
 import club.servicios.ReglaDeNegocioException;
+import club.persistencia.RepositorioCompetencias;
 import club.persistencia.RepositorioConjunto;
 import club.persistencia.RepositorioPartidos;
 import club.persistencia.RepositorioEstadisticas;
@@ -16,21 +17,29 @@ import club.persistencia.RepositorioComercio;
 
 public class ClubSeneca {
 
+    private final Map<String, Usuario> usuarios;
 
-private final Map<String, Usuario> usuarios;
-private final ServicioConjunto servicioConjunto;
-private final ServicioPartidos servicioPartidos;
-private final ServicioComercio servicioComercio;
+    private final ServicioConjunto servicioConjunto;
+    private final ServicioPartidos servicioPartidos;
+    private final ServicioCompetencias servicioCompetencias;
+    private final ServicioComercio servicioComercio;
+    private final ServicioIndividual servicioIndividual;
+
+    public ClubSeneca() {
+        this.usuarios = new HashMap<>();
+
+        this.servicioConjunto = new ServicioConjunto();
+        this.servicioPartidos = new ServicioPartidos();
+        this.servicioCompetencias =
+                new ServicioCompetencias(servicioPartidos);
+        this.servicioComercio = new ServicioComercio();
+        this.servicioIndividual = new ServicioIndividual(this);
+    }
 
 
-
-public ClubSeneca() {
-    this.usuarios = new HashMap<>();
-    this.servicioConjunto = new ServicioConjunto();
-    this.servicioPartidos = new ServicioPartidos();
-    this.servicioComercio = new ServicioComercio();
-}
-
+    public ServicioCompetencias getServicioCompetencias() {
+        return servicioCompetencias;
+    }
     public void registrarUsuario(Usuario usuario) {
         usuarios.put(usuario.getLogin(), usuario);
     }
@@ -53,8 +62,6 @@ public ServicioComercio getServicioComercio() {
     return servicioComercio;
 }
 
-private final ServicioIndividual servicioIndividual =
-        new ServicioIndividual(this);
 
 public ServicioIndividual getServicioIndividual() {
     return servicioIndividual;
@@ -81,18 +88,20 @@ public ServicioIndividual getServicioIndividual() {
     }
     
 
-    /** TODO: orden de carga: usuarios, modulo de Marco, modulo de Daniel, comercio. */
+    // se debe cargar en este orden:  usuarios, Deportes en conjunto (equipos, competencias, etc.), lo individual, comercio. */
     public void cargar(Path carpetaDatos) {
     	 RepositorioConjunto.cargar(carpetaDatos, this);
          RepositorioPartidos.cargar(carpetaDatos, this);
+         RepositorioCompetencias.cargar(carpetaDatos, this);
          RepositorioEstadisticas.cargar(carpetaDatos, this);
          RepositorioComercio.cargar(carpetaDatos, this);
     }
 
-    /** TODO: cada modulo guarda sus propios archivos. */
+     // cada uno debería guardar sus propios archivod
     public void guardar(Path carpetaDatos) {
     	RepositorioConjunto.guardar(carpetaDatos, this);
         RepositorioPartidos.guardar(carpetaDatos, this);
+        RepositorioCompetencias.guardar(carpetaDatos, this);
         RepositorioEstadisticas.guardar(carpetaDatos, this);
         RepositorioComercio.guardar(carpetaDatos, this);
     }

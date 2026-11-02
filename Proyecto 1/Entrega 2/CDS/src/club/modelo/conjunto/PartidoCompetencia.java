@@ -2,94 +2,120 @@ package club.modelo.conjunto;
 
 import java.time.LocalDate;
 
-import club.servicios.ReglaDeNegocioException;
 import club.modelo.usuarios.Socio;
+import club.servicios.ReglaDeNegocioException;
 
-/**
- * Partido que pertenece a una competencia (liga). Extiende Partido igual que PartidoInterno.
- *
- * EXTENSION PENDIENTE: cuando existan Competencia, Fase, Grupo e InscripcionCompetencia,
- * local y visitante pasarian a ser inscripciones, y se agregaria la nomina de jugadores.
- * Por ahora usa Equipo y un identificador de competencia para no depender de clases futuras.
- */
 public class PartidoCompetencia extends Partido {
 
     private final String idCompetencia;
     private final int jornada;
-    private final Equipo local;
-    private final Equipo visitante;
+    private final InscripcionCompetencia inscripcion;
+    private final InstitucionRival rival;
+    private final boolean clubEsLocal;
+    private final String escenario;
 
     public PartidoCompetencia(String id, String idCompetencia, int jornada,
-                              Equipo local, Equipo visitante, LocalDate fecha) {
-        super(id, deporteDe(local), fecha);
-        validar(idCompetencia, jornada, local, visitante);
+                              InscripcionCompetencia inscripcion, InstitucionRival rival,
+                              boolean clubEsLocal, String escenario, LocalDate fecha) {
+        super(id, deporteDe(inscripcion), fecha);
+        validar(idCompetencia, jornada, inscripcion, rival, escenario);
         this.idCompetencia = idCompetencia;
         this.jornada = jornada;
-        this.local = local;
-        this.visitante = visitante;
+        this.inscripcion = inscripcion;
+        this.rival = rival;
+        this.clubEsLocal = clubEsLocal;
+        this.escenario = escenario;
     }
 
+    /** Constructor de restauracion (lo usa el repositorio al cargar). */
     public PartidoCompetencia(String id, String idCompetencia, int jornada,
-                              Equipo local, Equipo visitante, LocalDate fecha,
+                              InscripcionCompetencia inscripcion, InstitucionRival rival,
+                              boolean clubEsLocal, String escenario, LocalDate fecha,
                               EstadoPartido estado, int marcadorLocal, int marcadorVisitante) {
-        super(id, deporteDe(local), fecha, estado, marcadorLocal, marcadorVisitante);
-        validar(idCompetencia, jornada, local, visitante);
+        super(id, deporteDe(inscripcion), fecha, estado, marcadorLocal, marcadorVisitante);
+        validar(idCompetencia, jornada, inscripcion, rival, escenario);
         this.idCompetencia = idCompetencia;
         this.jornada = jornada;
-        this.local = local;
-        this.visitante = visitante;
+        this.inscripcion = inscripcion;
+        this.rival = rival;
+        this.clubEsLocal = clubEsLocal;
+        this.escenario = escenario;
     }
 
     public String getIdCompetencia() { return idCompetencia; }
     public int getJornada() { return jornada; }
-    public Equipo getLocal() { return local; }
-    public Equipo getVisitante() { return visitante; }
+    public InscripcionCompetencia getInscripcion() { return inscripcion; }
+    public Equipo getEquipoClub() { return inscripcion.getEquipo(); }
+    public InstitucionRival getRival() { return rival; }
+    public boolean clubEsLocal() { return clubEsLocal; }
+    public String getEscenario() { return escenario; }
 
-    private static Deporte deporteDe(Equipo local) {
-        if (local == null) {
-            throw new ReglaDeNegocioException("El equipo local no puede ser nulo");
-        }
-        return local.getDeporte();
+    /** Marcador del equipo del club, sin importar si juega de local o de visitante. */
+    public int getMarcadorClub() {
+        return clubEsLocal ? getMarcadorLocal() : getMarcadorVisitante();
     }
 
-    private static void validar(String idCompetencia, int jornada, Equipo local, Equipo visitante) {
-        if (idCompetencia == null || idCompetencia.isBlank()) {
-            throw new ReglaDeNegocioException("El partido debe pertenecer a una competencia");
+    /** Marcador de la institucion rival. */
+    public int getMarcadorRival() {
+        return clubEsLocal ? getMarcadorVisitante() : getMarcadorLocal();
+    }
+
+    public String getNombreLocal() {
+        return clubEsLocal ? getEquipoClub().getNombre() : rival.getNombre();
+    }
+
+    public String getNombreVisitante() {
+        return clubEsLocal ? rival.getNombre() : getEquipoClub().getNombre();
+    }
+
+    private static Deporte deporteDe(InscripcionCompetencia inscripcion) {
+        if (inscripcion == null) {
+            throw new ReglaDeNegocioException("La inscripción del equipo no puede ser nula");
         }
+        return inscripcion.getEquipo().getDeporte();
+    }
+
+    private static void validar(String idCompetencia, int jornada, InscripcionCompetencia inscripcion,
+                                InstitucionRival rival, String escenario) {
+    	if (idCompetencia == null || idCompetencia.isBlank()) {
+            throw new ReglaDeNegocioException(
+                "El partido debe pertenecer a una competencia"
+            );
+        }
+
         if (jornada <= 0) {
-            throw new ReglaDeNegocioException("La jornada debe ser positiva");
+            throw new ReglaDeNegocioException(
+                "La jornada debe ser un número positivo"
+            );
         }
-        if (visitante == null) {
-            throw new ReglaDeNegocioException("El equipo visitante no puede ser nulo");
+
+        if (inscripcion == null) {
+            throw new ReglaDeNegocioException(
+                "La inscripción del equipo no puede ser nula"
+            );
         }
-        if (local == visitante) {
-            throw new ReglaDeNegocioException("Un equipo no puede jugar contra sí mismo");
+
+        if (rival == null) {
+            throw new ReglaDeNegocioException(
+                "La institución rival es obligatoria"
+            );
         }
-        if (!local.getDeporte().getNombre().equals(visitante.getDeporte().getNombre())) {
-            throw new ReglaDeNegocioException("Los equipos deben ser del mismo deporte");
+
+        if (escenario == null || escenario.isBlank()) {
+            throw new ReglaDeNegocioException(
+                "El escenario del partido es obligatorio"
+            );
         }
-        if (local.getCategoria() != visitante.getCategoria()) {
-            throw new ReglaDeNegocioException("Los equipos deben ser de la misma categoría");
+
+        if (escenario.contains(";")) {
+            throw new ReglaDeNegocioException(
+                "El escenario no puede contener ';'"
+            );
         }
     }
+
     @Override
     protected boolean participaJugador(Socio socio) {
-
-        if (socio == null) {
-            return false;
-        }
-        for (IntegranteEquipo integrante : local.getIntegrantesActivos()) {
-            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
-                return true;
-            }
-        }
-        for (IntegranteEquipo integrante : visitante.getIntegrantesActivos()) {
-            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
-                return true;
-            }
-        }
-
-        return false;
+        return socio != null && inscripcion.tieneJugador(socio.getLogin());
     }
-    
-}
+} 

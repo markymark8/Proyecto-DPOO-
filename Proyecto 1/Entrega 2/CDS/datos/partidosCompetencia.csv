@@ -1,0 +1,4 @@
+id;idCompetencia;jornada;idEquipo;rival;clubEsLocal;escenario;fecha;estado;marcadorLocal;marcadorVisitante
+PC-001;CP-001;1;EQ-001;Colegio San Jorge;true;Cancha Los Pinos;2026-10-10;JUGADO;2;1
+PC-002;CP-001;2;EQ-001;Club Atletico Norte;false;Estadio Norte;2026-10-24;JUGADO;0;0
+PC-003;CP-001;3;EQ-001;Colegio San Jorge;true;Cancha Los Pinos;2026-11-20;PROGRAMADO;0;0
