@@ -181,6 +181,7 @@ public class ServicioIndividual {
     public void asignarNivel(Entrenador entrenador, Socio socio, Disciplina disciplina, Nivel nivel) {
         exigir(entrenador != null, "Solo un entrenador puede asignar niveles");
         InscripcionAcademia inscripcion = buscarAcademia(disciplina).getInscripcionDe(socio);
+        inscripcion.asignarNivel(nivel);
     }
 
     // ================= Reservas (P2) =================
@@ -243,7 +244,6 @@ public class ServicioIndividual {
         Disciplina disciplina = disciplinaDe(partido.getInstalacion());
         Academia academia = buscarAcademia(disciplina);
         
-        Set<String> vistos = new HashSet<>();
         int setsA = 0;
         int setsB = 0;
         for (EstadisticaIndividual e : estadisticas) {
