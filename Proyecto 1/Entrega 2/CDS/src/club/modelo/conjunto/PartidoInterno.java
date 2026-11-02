@@ -141,4 +141,24 @@ public class PartidoInterno extends Partido {
 
         return rojasPorJugador.contains(login);
     }  
+
+    /** Solo para el repositorio: restaura las tarjetas que un jugador recibio en este partido. */
+    public void restaurarTarjetasPartido(String login, int amarillas, boolean roja) {
+        if (login == null || amarillas < 0) {
+            throw new ReglaDeNegocioException("Datos inválidos para restaurar las tarjetas del partido");
+        }
+        if (amarillas > 0) {
+            amarillasPorJugador.put(login, amarillas);
+        }
+        if (roja) {
+            rojasPorJugador.add(login);
+        }
+    }
+
+    /** Logins de los jugadores que recibieron alguna tarjeta en este partido, ordenados. */
+    public java.util.Set<String> getLoginsConTarjetaPartido() {
+        java.util.Set<String> logins = new java.util.TreeSet<>(amarillasPorJugador.keySet());
+        logins.addAll(rojasPorJugador);
+        return logins;
+    }
 }

@@ -103,6 +103,12 @@ public class ServicioPartidos {
             );
         }
 
+        if (partido.getEstadisticaJugador(socio) != null) {
+            throw new ReglaDeNegocioException(
+                "Registra las tarjetas del jugador antes de sus estadísticas"
+            );
+        }
+
         IntegranteEquipo integranteEncontrado = null;
 
         for (IntegranteEquipo integrante : partido.getLocal().getIntegrantesActivos()) {
