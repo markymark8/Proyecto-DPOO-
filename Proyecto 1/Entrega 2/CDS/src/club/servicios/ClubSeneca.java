@@ -10,6 +10,7 @@ import club.servicios.ReglaDeNegocioException;
 import club.persistencia.RepositorioConjunto;
 import club.persistencia.RepositorioPartidos;
 import club.persistencia.RepositorioEstadisticas;
+import club.persistencia.RepositorioComercio;
 
 
 
@@ -85,6 +86,7 @@ public ServicioIndividual getServicioIndividual() {
     	 RepositorioConjunto.cargar(carpetaDatos, this);
          RepositorioPartidos.cargar(carpetaDatos, this);
          RepositorioEstadisticas.cargar(carpetaDatos, this);
+         RepositorioComercio.cargar(carpetaDatos, this);
     }
 
     /** TODO: cada modulo guarda sus propios archivos. */
@@ -92,5 +94,6 @@ public ServicioIndividual getServicioIndividual() {
     	RepositorioConjunto.guardar(carpetaDatos, this);
         RepositorioPartidos.guardar(carpetaDatos, this);
         RepositorioEstadisticas.guardar(carpetaDatos, this);
+        RepositorioComercio.guardar(carpetaDatos, this);
     }
 }
