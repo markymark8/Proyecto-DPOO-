@@ -6,12 +6,15 @@ import club.servicios.ReglaDeNegocioException;
 
 import java.util.HashSet;
 import java.util.Set;
+import club.modelo.usuarios.Socio;
 
 public class PartidoInterno extends Partido {
 
     private final Equipo local;
     private final Equipo visitante;
     private final Set<String> sancionados = new HashSet<>();
+    private final java.util.Map<String, Integer> amarillasPorJugador = new java.util.HashMap<>();
+    private final Set<String> rojasPorJugador = new HashSet<>();
 
     public PartidoInterno(String id, Equipo local, Equipo visitante, LocalDate fecha) {
         super(id, deporteDe(local), fecha);
@@ -63,4 +66,79 @@ public class PartidoInterno extends Partido {
     public Set<String> getSancionados() {
         return new HashSet<>(sancionados);
     }
+    @Override
+    protected boolean participaJugador(Socio socio) {
+
+        if (socio == null) {
+            return false;
+        }
+        for (IntegranteEquipo integrante : local.getIntegrantesActivos()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                return true;
+            }
+        }
+        for (IntegranteEquipo integrante : visitante.getIntegrantesActivos()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean estaSuspendidoInternamente(Socio socio) {
+
+        if (socio == null) {
+            return false;
+        }
+
+        for (IntegranteEquipo integrante : local.getIntegrantes()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                return integrante.isSuspendidoInterno();
+            }
+        }
+
+        for (IntegranteEquipo integrante : visitante.getIntegrantes()) {
+            if (integrante.getSocio().getLogin().equals(socio.getLogin())) {
+                return integrante.isSuspendidoInterno();
+            }
+        }
+
+        return false;
+    }
+    public void registrarAmarillaPartido(String login) {
+        if (login == null) {
+            throw new ReglaDeNegocioException(
+                "El login del jugador no puede ser nulo"
+            );
+        }
+
+        amarillasPorJugador.put(
+            login,
+            amarillasPorJugador.getOrDefault(login, 0) + 1
+        );
+    }
+
+    public int getAmarillasPartido(String login) {
+        if (login == null) {
+            return 0;
+        }
+
+        return amarillasPorJugador.getOrDefault(login, 0);
+    }
+    public void registrarRojaPartido(String login) {
+        if (login == null) {
+            throw new ReglaDeNegocioException(
+                "El login del jugador no puede ser nulo"
+            );
+        }
+
+        rojasPorJugador.add(login);
+    }
+
+    public boolean recibioRojaPartido(String login) {
+        if (login == null) {
+            return false;
+        }
+
+        return rojasPorJugador.contains(login);
+    }  
 }

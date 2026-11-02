@@ -2,8 +2,12 @@
 package club.modelo.conjunto;
 
 import java.time.LocalDate;
-
 import club.servicios.ReglaDeNegocioException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import club.modelo.usuarios.Socio;
 
 public abstract class Partido {
 
@@ -13,6 +17,7 @@ public abstract class Partido {
     private EstadoPartido estado;
     private int marcadorLocal;
     private int marcadorVisitante;
+    private final List<EstadisticaJugador> estadisticas;
 
     protected Partido(String id, Deporte deporte, LocalDate fecha) {
 
@@ -28,6 +33,7 @@ public abstract class Partido {
         this.estado = EstadoPartido.PROGRAMADO;
         this.marcadorLocal = 0;
         this.marcadorVisitante = 0;
+        this.estadisticas = new ArrayList<>();
     }
 
     protected Partido(String id, Deporte deporte, LocalDate fecha,
@@ -52,6 +58,7 @@ public abstract class Partido {
         this.estado = estado;
         this.marcadorLocal = marcadorLocal;
         this.marcadorVisitante = marcadorVisitante;
+        this.estadisticas = new ArrayList<>();
     }
 
     public String getId() {
@@ -100,4 +107,98 @@ public abstract class Partido {
         this.marcadorVisitante = marcadorVisitante;
         this.estado = EstadoPartido.JUGADO;
     }
+    public void agregarEstadistica(EstadisticaJugador estadistica) {
+
+        if (estadistica == null) {
+            throw new ReglaDeNegocioException(
+                "La estadística no puede ser nula"
+            );
+        }
+
+        if (estaJugado()) {
+            throw new ReglaDeNegocioException(
+                "No se pueden agregar estadísticas a un partido finalizado"
+            );
+        }
+
+        if (!tipoEstadisticaValido(estadistica)) {
+            throw new ReglaDeNegocioException(
+                "El tipo de estadística no corresponde al deporte del partido"
+            );
+        }
+
+        Socio jugador = estadistica.getJugador();
+
+        if (!participaJugador(jugador)) {
+            throw new ReglaDeNegocioException(
+                "El jugador no pertenece a los equipos participantes"
+            );
+        }
+        if (this instanceof PartidoInterno) {
+            PartidoInterno partidoInterno = (PartidoInterno) this;
+
+            if (partidoInterno.estaSuspendidoInternamente(jugador)
+                    && !partidoInterno.fueSancionado(jugador.getLogin())) {
+
+                throw new ReglaDeNegocioException(
+                    "El jugador está cumpliendo una suspensión interna"
+                );
+            }
+        }
+
+        for (EstadisticaJugador existente : estadisticas) {
+            if (existente.getJugador().getLogin()
+                    .equals(jugador.getLogin())) {
+
+                throw new ReglaDeNegocioException(
+                    "El jugador ya tiene estadísticas registradas en este partido"
+                );
+            }
+        }
+
+        estadisticas.add(estadistica);
+    }
+
+    public List<EstadisticaJugador> getEstadisticas() {
+        return Collections.unmodifiableList(estadisticas);
+    }
+
+    public EstadisticaJugador getEstadisticaJugador(Socio jugador) {
+
+        if (jugador == null) {
+            throw new ReglaDeNegocioException(
+                "El jugador no puede ser nulo"
+            );
+        }
+
+        for (EstadisticaJugador estadistica : estadisticas) {
+            if (estadistica.getJugador().getLogin()
+                    .equals(jugador.getLogin())) {
+
+                return estadistica;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean tipoEstadisticaValido(EstadisticaJugador estadistica) {
+
+        String nombreDeporte = deporte.getNombre();
+
+        if (nombreDeporte.equalsIgnoreCase("FUTBOL")) {
+            return estadistica instanceof EstadisticaFutbol;
+        }
+
+        if (nombreDeporte.equalsIgnoreCase("BASKET")) {
+            return estadistica instanceof EstadisticaBasket;
+        }
+
+        if (nombreDeporte.equalsIgnoreCase("VOLEIBOL")) {
+            return estadistica instanceof EstadisticaVoleibol;
+        }
+
+        return false;
+    }
+    protected abstract boolean participaJugador(Socio socio);  
 }
