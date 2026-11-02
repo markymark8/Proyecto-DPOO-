@@ -24,8 +24,6 @@ public class IntegranteEquipo {
         this.amarillasAcumuladasInterno = 0;
         this.suspendidoInterno = false;
     }
-    
-    /** Solo para el repositorio: reconstruye un integrante con el estado guardado en el CSV. */
     public IntegranteEquipo(Socio socio, Posicion posicion, int numeroCamiseta, LocalDate fechaIngreso,
                             boolean activo, int amarillasAcumuladas, boolean suspendido) {
         if (socio == null || posicion == null || fechaIngreso == null) {
