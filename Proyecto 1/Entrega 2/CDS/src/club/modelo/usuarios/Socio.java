@@ -3,18 +3,17 @@ package club.modelo.usuarios;
 import java.time.LocalDate;
 import java.time.Period;
 import club.servicios.ReglaDeNegocioException;
+import modelo.ventas.venta;
+import java.util.ArrayList;
 
-/**
- * Socio del club. Es tambien el "jugador": no existe una clase Jugador.
- * Puede estar asociado (opcionalmente) a un Empleado.
- */
 public class Socio extends Usuario implements Comprador {
 
     private LocalDate fechaNacimiento;
     private int puntosFidelidad;
     private boolean bebidaCaliente;
     private boolean activo;
-    private Empleado empleado; // puede ser null
+    private Empleado empleado; 
+    private ArrayList<venta> ventas;
 
     public Socio(String login, String nombre, String contrasenaHash, LocalDate fechaNacimiento) {
         super(login, nombre, contrasenaHash);
@@ -23,6 +22,7 @@ public class Socio extends Usuario implements Comprador {
         this.bebidaCaliente = false;
         this.activo = true;
         this.empleado = null;
+        this.ventas = new ArrayList<>();
     }
 
     public LocalDate getFechaNacimiento() {
@@ -37,10 +37,15 @@ public class Socio extends Usuario implements Comprador {
     public int getPuntosFidelidad() {
         return puntosFidelidad;
     }
-
-    public void setPuntosFidelidad(int puntosFidelidad) {
-        this.puntosFidelidad = puntosFidelidad;
+    
+     public void setPuntosFidelidad(int puntosFidelidad) {
+    if (puntosFidelidad < 0) {
+        throw new ReglaDeNegocioException(
+            "Los puntos de fidelidad no pueden ser negativos");
     }
+
+    this.puntosFidelidad = puntosFidelidad;
+}
 
     public boolean isActivo() {
         return activo;
@@ -102,4 +107,21 @@ public class Socio extends Usuario implements Comprador {
     	puntosFidelidad -= puntos;
        
     }
+    
+    public ArrayList<venta> getVentas() {
+        return ventas;
+    }
+    
+    public void agregarVenta(venta nuevaVenta) {
+        if (nuevaVenta == null) {
+            throw new ReglaDeNegocioException("La venta no puede ser nula");
+        }
+
+        if (ventas.contains(nuevaVenta)) {
+            throw new ReglaDeNegocioException("La venta ya está registrada");
+        }
+
+        this.ventas.add(nuevaVenta);
+    }
+    
 }

@@ -15,17 +15,20 @@ import club.persistencia.RepositorioEstadisticas;
 
 public class ClubSeneca {
 
-    private final Map<String, Usuario> usuarios;
-    private final ServicioConjunto servicioConjunto;
-    private final ServicioPartidos servicioPartidos;
-    private final ServicioComercio servicioComercio;
 
-    public ClubSeneca() {
-        this.usuarios = new HashMap<>();
-        this.servicioConjunto = new ServicioConjunto();
-        this.servicioPartidos = new ServicioPartidos();
-        this.servicioComercio = new ServicioComercio();
-    }
+private final Map<String, Usuario> usuarios;
+private final ServicioConjunto servicioConjunto;
+private final ServicioPartidos servicioPartidos;
+private final ServicioComercio servicioComercio;
+
+
+
+public ClubSeneca() {
+    this.usuarios = new HashMap<>();
+    this.servicioConjunto = new ServicioConjunto();
+    this.servicioPartidos = new ServicioPartidos();
+    this.servicioComercio = new ServicioComercio();
+}
 
     public void registrarUsuario(Usuario usuario) {
         usuarios.put(usuario.getLogin(), usuario);
@@ -34,12 +37,16 @@ public class ClubSeneca {
     public Usuario buscarUsuario(String login) {
         return usuarios.get(login);
     }
-    public ServicioConjunto getServicioConjunto() {       
-        return servicioConjunto;                            
-    }         
-    public ServicioPartidos getServicioPartidos() {
-        return servicioPartidos;
-    }
+
+public ServicioConjunto getServicioConjunto() {
+    return servicioConjunto;
+}
+
+public ServicioPartidos getServicioPartidos() {
+    return servicioPartidos;
+}
+
+    
 
 public ServicioComercio getServicioComercio() {
     return servicioComercio;

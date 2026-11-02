@@ -6,4 +6,9 @@ public class Fisioterapeuta extends Empleado {
     public Fisioterapeuta(String login, String nombre, String contrasenaHash, String codigoDescuento) {
         super(login, nombre, contrasenaHash, codigoDescuento);
     }
+    
+    @Override
+    public String getTipoEmpleado() {
+        return "Fisioterapeuta";
+    }
 }
