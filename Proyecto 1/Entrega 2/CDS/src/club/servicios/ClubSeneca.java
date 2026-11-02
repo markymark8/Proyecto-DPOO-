@@ -37,6 +37,11 @@ public class ClubSeneca {
     public ServicioPartidos getServicioPartidos() {
         return servicioPartidos;
     }
+    private final ServicioIndividual servicioIndividual = new ServicioIndividual(this);
+
+    public ServicioIndividual getServicioIndividual() {
+        return servicioIndividual;
+    }
 
     public Socio getSocio(String login) {
 

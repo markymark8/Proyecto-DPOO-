@@ -119,10 +119,10 @@ public class ServicioIndividual {
 
    
     private Socio socioDe(Usuario usuario) {
-        exigir(usuario != null, "Debe indicar el usuario");
         if (usuario instanceof Socio) {
             return (Socio) usuario;
         }
+		return null;
     }
 
     private boolean contiene(List<Socio> lista, Socio socio) {

@@ -124,7 +124,7 @@ public class RepositorioIndividual {
     }
 
     private static void cargarReservas(Path archivo, ClubSeneca club) {
-        ServicioRaqueta servicio = club.getServicioRaqueta();
+        ServicioIndividual servicio = club.getServicioIndividual();
         int numeroFila = 1;
         for (String[] fila : Csv.leer(archivo)) {
             numeroFila++;
@@ -143,7 +143,7 @@ public class RepositorioIndividual {
     }
 
     private static void cargarPartidos(Path archivo, ClubSeneca club) {
-        ServicioIndividual servicio = club.getServicioRaqueta();
+        ServicioIndividual servicio = club.getServicioIndividual();
         int numeroFila = 1;
         for (String[] fila : Csv.leer(archivo)) {
             numeroFila++;
@@ -165,7 +165,7 @@ public class RepositorioIndividual {
     }
 
     private static void cargarSesiones(Path archivo, ClubSeneca club) {
-        ServicioRaqueta servicio = club.getServicioRaqueta();
+        ServicioIndividual servicio = club.getServicioIndividual();
         int numeroFila = 1;
         for (String[] fila : Csv.leer(archivo)) {
             numeroFila++;
@@ -173,11 +173,11 @@ public class RepositorioIndividual {
             try {
                 Usuario usuario = buscarUsuario(club, fila[5], ARCHIVO_SESIONES, numeroFila);
                 if (!(usuario instanceof Entrenador)) {
-                    throw error(ARCHIVO_SESIONES, numeroFila, "el usuario " + fila[5] + " no es un entrenador");
+                    throw error(ARCHIVO_SESIONES, numeroFila, "el usuario no es un entrenador");
                 }
                 SesionEntrenamiento sesion = new SesionEntrenamiento(Integer.parseInt(fila[0]),
                         buscarInstalacion(servicio, fila[1], ARCHIVO_SESIONES, numeroFila), bloque(fila),
-                        (Entrenador) usuario, TipoSesion.valueOf(fila[7]), null);
+                        (Entrenador) usuario, TipoSesion.valueOf(fila[7]));
                 for (Socio convocado : socios(club, fila[8])) {
                     sesion.convocar(convocado);
                 }
@@ -189,10 +189,10 @@ public class RepositorioIndividual {
         }
     }
 
-    // ===================== GUARDAR =====================
+    // MÉTODOS PARA GUARDAR 
 
     public static void guardar(Path carpeta, ClubSeneca club) {
-        ServicioIndividual servicio = club.getServicioRaqueta();
+        ServicioIndividual servicio = club.getServicioIndividual();
         guardarAcademias(carpeta.resolve(ARCHIVO_ACADEMIAS), servicio);
         guardarInstalaciones(carpeta.resolve(ARCHIVO_INSTALACIONES), servicio);
         guardarInscripciones(carpeta.resolve(ARCHIVO_INSCRIPCIONES), servicio);
@@ -234,7 +234,7 @@ public class RepositorioIndividual {
         List<String[]> filas = new ArrayList<>();
         for (Reserva r : servicio.getReservas()) {
             if (r instanceof PartidoPractica || r instanceof SesionEntrenamiento) {
-                continue; // esas van en su propio archivo
+                continue; 
             }
             filas.add(fila(r, String.valueOf(r.getNumeroJugadores()),
                     r.getModalidad() == null ? "" : r.getModalidad().name()));
@@ -260,7 +260,7 @@ public class RepositorioIndividual {
 
     // ===================== AYUDAS =====================
 
-    /** Las 7 columnas comunes de una reserva, mas las 2 propias de cada archivo. */
+
     private static String[] fila(Reserva r, String extra1, String extra2) {
         return new String[] { String.valueOf(r.getId()), String.valueOf(r.getInstalacion().getCodigo()),
                 r.getBloque().getFecha().toString(), r.getBloque().getHoraInicio().toString(),
@@ -323,4 +323,4 @@ public class RepositorioIndividual {
     private static ReglaDeNegocioException error(String archivo, int numeroFila, String motivo) {
         return new ReglaDeNegocioException("Error en " + archivo + ", fila " + numeroFila + ": " + motivo);
     }
-}}
+}
