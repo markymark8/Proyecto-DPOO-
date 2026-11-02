@@ -15,11 +15,13 @@ import club.modelo.usuarios.Usuario;
  */
 public class ClubSeneca {
 
-    private final Map<String, Usuario> usuarios; // por login
+private final Map<String, Usuario> usuarios;
+private final ServicioComercio servicioComercio;
 
-    public ClubSeneca() {
-        this.usuarios = new HashMap<>();
-    }
+public ClubSeneca() {
+    this.usuarios = new HashMap<>();
+    this.servicioComercio = new ServicioComercio();
+}
 
     public void registrarUsuario(Usuario usuario) {
         usuarios.put(usuario.getLogin(), usuario);
@@ -29,7 +31,9 @@ public class ClubSeneca {
     public Usuario buscarUsuario(String login) {
         return usuarios.get(login);
     }
-
+    public ServicioComercio getServicioComercio() {
+        return servicioComercio;
+    }
     /** TODO (a mano): devolver el Socio con ese login; si no existe o no es Socio, lanzar ReglaDeNegocioException. */
     public Socio getSocio(String login) {
         throw new UnsupportedOperationException("TODO: getSocio");
