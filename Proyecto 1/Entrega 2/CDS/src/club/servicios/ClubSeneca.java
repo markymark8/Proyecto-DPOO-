@@ -9,6 +9,7 @@ import club.modelo.usuarios.Usuario;
 import club.servicios.ReglaDeNegocioException;
 import club.persistencia.RepositorioConjunto;
 import club.persistencia.RepositorioPartidos;
+import club.persistencia.RepositorioEstadisticas;
 
 
 
@@ -39,9 +40,18 @@ public class ClubSeneca {
     public ServicioPartidos getServicioPartidos() {
         return servicioPartidos;
     }
-    public ServicioComercio getServicioComercio() {
-        return servicioComercio;
-    }
+
+public ServicioComercio getServicioComercio() {
+    return servicioComercio;
+}
+
+private final ServicioIndividual servicioIndividual =
+        new ServicioIndividual(this);
+
+public ServicioIndividual getServicioIndividual() {
+    return servicioIndividual;
+}
+
 
     public Socio getSocio(String login) {
 
@@ -66,12 +76,14 @@ public class ClubSeneca {
     /** TODO: orden de carga: usuarios, modulo de Marco, modulo de Daniel, comercio. */
     public void cargar(Path carpetaDatos) {
     	 RepositorioConjunto.cargar(carpetaDatos, this);
-         RepositorioPartidos.cargar(carpetaDatos, this);   
+         RepositorioPartidos.cargar(carpetaDatos, this);
+         RepositorioEstadisticas.cargar(carpetaDatos, this);
     }
 
     /** TODO: cada modulo guarda sus propios archivos. */
     public void guardar(Path carpetaDatos) {
     	RepositorioConjunto.guardar(carpetaDatos, this);
         RepositorioPartidos.guardar(carpetaDatos, this);
+        RepositorioEstadisticas.guardar(carpetaDatos, this);
     }
 }
