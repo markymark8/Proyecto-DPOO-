@@ -14,6 +14,7 @@ import club.modelo.usuarios.Socio;
 import club.modelo.conjunto.EstadisticaFutbol;
 import club.modelo.conjunto.EstadisticaBasket;
 import club.modelo.conjunto.EstadisticaVoleibol;
+import club.modelo.conjunto.PartidoExterno;
 
 // PROGRAMAR PARTIDOS INTERNOS, REGISTRA TARJETAS, ESTADISTICAS Y CIERRA PARTIDOS CON LOS RESULTADOS 
 public class ServicioPartidos {
@@ -21,6 +22,7 @@ public class ServicioPartidos {
     private final List<Partido> partidos;
     private int contadorPartidos;
     private int contadorCompetencia;
+    private int contadorExterno;
 
 
     public ServicioPartidos() {
@@ -234,18 +236,26 @@ public class ServicioPartidos {
         }
     }
 
-    /** Id que tendra el proximo partido de competencia (PC-001...). No consume el contador. */
     public String generarIdPartidoCompetencia() {
         return String.format("PC-%03d", contadorCompetencia + 1);
     }
 
-    /** Registra un partido de competencia nuevo; aqui si se consume el contador de ids. */
     public void agregarPartidoCompetencia(PartidoCompetencia partido) {
         if (partido == null) {
             throw new ReglaDeNegocioException("El partido no puede ser nulo");
         }
         partidos.add(partido);
         contadorCompetencia++;
+    }
+    public String generarIdPartidoExterno() {
+        return String.format("PX-%03d", contadorExterno + 1);
+    }
+    public void agregarPartidoExterno(PartidoExterno partido) {
+        if (partido == null) {
+            throw new ReglaDeNegocioException("El partido no puede ser nulo");
+        }
+        partidos.add(partido);
+        contadorExterno++;
     }
     public void registrarEstadisticaFutbol(
             Partido partido,

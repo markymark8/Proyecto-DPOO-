@@ -17,6 +17,7 @@ public class Competencia {
     private final Categoria categoria;
     private final List<InscripcionCompetencia> inscripciones;
     private final List<InstitucionRival> rivales;
+    private final List<Fase> fases;
     
     public Competencia(String id, String nombre, String organizador, String temporada,
                        Deporte deporte, Categoria categoria) {
@@ -45,9 +46,9 @@ public class Competencia {
         this.temporada = temporada.trim();
         this.deporte = deporte;
         this.categoria = categoria;
-
         this.inscripciones = new ArrayList<>();
         this.rivales = new ArrayList<>();
+        this.fases = new ArrayList<>();
     }
 
     public String getId() { return id; }
@@ -125,5 +126,41 @@ public class Competencia {
             throw new ReglaDeNegocioException("El rival no puede ser nulo");
         }
         rivales.add(rival);
+    }
+    public List<Fase> getFases() {
+        return Collections.unmodifiableList(fases);
+    }
+
+    public Fase getFase(int orden) {
+        for (Fase fase : fases) {
+            if (fase.getOrden() == orden) {
+                return fase;
+            }
+        }
+        return null;
+    }
+    public void agregarFase(Fase fase) {
+
+        if (fase == null) {
+            throw new ReglaDeNegocioException(
+                "La fase no puede ser nula"
+            );
+        }
+
+        if (getFase(fase.getOrden()) != null) {
+            throw new ReglaDeNegocioException(
+                "Ya existe una fase con ese orden en la competencia"
+            );
+        }
+
+        fases.add(fase);
+
+        fases.sort((a, b) ->
+            Integer.compare(a.getOrden(), b.getOrden())
+        );
+    }
+    public void agregarFaseCargada(Fase fase) {
+        fases.add(fase);
+        fases.sort((a, b) -> Integer.compare(a.getOrden(), b.getOrden()));
     }
 }
