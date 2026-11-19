@@ -101,12 +101,22 @@ public double calcularDescuento(Comprador comprador,
         throw new ReglaDeNegocioException(
             "El comprador no puede ser nulo");
     }
+    
+    if (comprador instanceof Empleado &&
+    	    codigoDescuento != null &&
+    	    !codigoDescuento.isEmpty()) {
+
+    	    throw new ReglaDeNegocioException(
+    	        "No se pueden acumular descuentos");
+    	}
 
     double porcentaje = 0;
 
     if (comprador instanceof Empleado) {
         porcentaje = 0.15;
-    } else if (codigoDescuento != null && empleados != null) {
+    } else if (comprador instanceof Socio
+            && codigoDescuento != null
+            && empleados != null) {
 
         for (Empleado empleado : empleados) {
             if (empleado.getCodigoDescuento() != null &&
@@ -176,7 +186,7 @@ public void confirmarVenta(Comprador comprador,
             "La venta debe tener al menos un articulo");
     }
 
-    // Verificar nuevamente el inventario
+   
     for (int i = 0; i < articulos.size(); i++) {
 
         Articulo articulo = articulos.get(i);
@@ -231,6 +241,8 @@ public void confirmarVenta(Comprador comprador,
     confirmada = true;
 }
 
-	
+public boolean isConfirmada() {
+    return confirmada;
+}
 
 }

@@ -33,10 +33,14 @@ public class PruebaCafeteria {
         );
 
         venta.agregarProducto(cafe, 2);
+        
+        System.out.println("Bebida caliente antes: " + socio.tieneBebidaCaliente());
 
         club.getServicioComercio().realizarCompraCafeteria(
             venta, socio, 0
         );
+        
+        System.out.println("Bebida caliente después: " + socio.tieneBebidaCaliente());
 
         System.out.println("=== PRUEBA CAFETERIA ===");
 

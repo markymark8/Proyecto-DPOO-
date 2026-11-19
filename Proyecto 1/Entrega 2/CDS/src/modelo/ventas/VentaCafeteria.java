@@ -210,9 +210,7 @@ if (contieneSnack && !alergenosInformados) {
         ((Empleado) comprador).agregarVenta(this);
     }
 
-    { confirmada = true;
-    
-    }
+    confirmada = true;
 }
 
 
@@ -260,4 +258,9 @@ public void confirmarInformacionAlergenos() {
 
     this.alergenosInformados = true;
 }
+    
+public boolean isConfirmada() {
+        return confirmada;
+    }
 }
+

@@ -11,6 +11,7 @@ import modelo.ventas.VentaCafeteria;
 
 import club.modelo.usuarios.Comprador;
 import club.modelo.usuarios.Empleado;
+import club.modelo.usuarios.Socio;
 
 public class ServicioComercio {
 
@@ -66,6 +67,7 @@ public class ServicioComercio {
             throw new ReglaDeNegocioException(
                 "Esta venta ya fue registrada");
         }
+        
 
         ventas.add(nuevaVenta);
     }
@@ -110,6 +112,14 @@ public class ServicioComercio {
         }
 
         ventaCafeteria.confirmarVenta(comprador, puntosUsar);
+        
+        if (comprador instanceof Socio) {
+            Socio socio = (Socio) comprador;
+
+            if (ventaCafeteria.contieneBebidaCaliente()) {
+                socio.marcarBebidaCaliente(true);
+            }
+        }
 
         registrarVenta(ventaCafeteria);
     }
