@@ -8,30 +8,33 @@ public class PartidoExterno extends Partido {
 
     private final String idCompetencia;
     private final int jornada;
+    private final int ordenFase;
     private final InstitucionRival rivalLocal;
     private final InstitucionRival rivalVisitante;
     private final String escenario;
 
-    public PartidoExterno(String id, String idCompetencia, int jornada, Deporte deporte,
+    public PartidoExterno(String id, String idCompetencia, int jornada, int ordenFase, Deporte deporte,
                           InstitucionRival rivalLocal, InstitucionRival rivalVisitante,
                           String escenario, LocalDate fecha) {
         super(id, deporte, fecha);
-        validar(idCompetencia, jornada, rivalLocal, rivalVisitante, escenario);
+        validar(idCompetencia, jornada, ordenFase, rivalLocal, rivalVisitante, escenario);
         this.idCompetencia = idCompetencia;
         this.jornada = jornada;
+        this.ordenFase= ordenFase;
         this.rivalLocal = rivalLocal;
         this.rivalVisitante = rivalVisitante;
         this.escenario = escenario;
     }
 
-    public PartidoExterno(String id, String idCompetencia, int jornada, Deporte deporte,
+    public PartidoExterno(String id, String idCompetencia, int jornada, int ordenFase, Deporte deporte,
                           InstitucionRival rivalLocal, InstitucionRival rivalVisitante,
                           String escenario, LocalDate fecha,
                           EstadoPartido estado, int marcadorLocal, int marcadorVisitante) {
         super(id, deporte, fecha, estado, marcadorLocal, marcadorVisitante);
-        validar(idCompetencia, jornada, rivalLocal, rivalVisitante, escenario);
+        validar(idCompetencia, jornada, ordenFase, rivalLocal, rivalVisitante, escenario);
         this.idCompetencia = idCompetencia;
         this.jornada = jornada;
+        this.ordenFase = ordenFase;
         this.rivalLocal = rivalLocal;
         this.rivalVisitante = rivalVisitante;
         this.escenario = escenario;
@@ -39,11 +42,12 @@ public class PartidoExterno extends Partido {
 
     public String getIdCompetencia() { return idCompetencia; }
     public int getJornada() { return jornada; }
+    public int getOrdenFase() {return ordenFase;}
     public InstitucionRival getRivalLocal() { return rivalLocal; }
     public InstitucionRival getRivalVisitante() { return rivalVisitante; }
     public String getEscenario() { return escenario; }
 
-private static void validar(String idCompetencia, int jornada,
+private static void validar(String idCompetencia, int jornada, int ordenFase,
                             InstitucionRival rivalLocal,
                             InstitucionRival rivalVisitante,
                             String escenario) {
@@ -57,6 +61,11 @@ private static void validar(String idCompetencia, int jornada,
     if (jornada <= 0) {
         throw new ReglaDeNegocioException(
             "La jornada debe ser un número positivo"
+        );
+    }
+    if (ordenFase <= 0) {
+        throw new ReglaDeNegocioException(
+                "El orden de la fase debe ser mayor que cero"
         );
     }
     if (rivalLocal == null || rivalVisitante == null) {

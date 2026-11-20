@@ -204,7 +204,7 @@ public class ServicioCompetencias {
     // registrar partido de competencia.
 
     public PartidoCompetencia registrarPartido(Competencia competencia, Equipo equipo,
-                                               String nombreRival, int jornada, boolean clubEsLocal,
+                                               String nombreRival, int jornada,int ordenFase, boolean clubEsLocal,
                                                String escenario, LocalDate fecha) {
     	exigirCompetencia(competencia);
 
@@ -230,12 +230,19 @@ public class ServicioCompetencias {
                 "La institución rival no está registrada en esta competencia"
             );
         }
+        
+        if (competencia.getFase(ordenFase) == null) {
+            throw new ReglaDeNegocioException(
+                    "La competencia no tiene esa fase"
+                );
+            }
         String id = servicioPartidos.generarIdPartidoCompetencia();
 
         PartidoCompetencia partido = new PartidoCompetencia(
             id,
             competencia.getId(),
             jornada,
+            ordenFase,
             inscripcion,
             rival,
             clubEsLocal,
@@ -285,6 +292,7 @@ public class ServicioCompetencias {
             String nombreRivalLocal,
             String nombreRivalVisitante,
             int jornada,
+            int ordenFase,
             String escenario,
             LocalDate fecha) {
 
@@ -301,12 +309,17 @@ public class ServicioCompetencias {
                 "Ambas instituciones deben estar registradas en esta competencia"
             );
         }
+        
+        if (competencia.getFase(ordenFase) == null) {
+            throw new ReglaDeNegocioException("La competencia no tiene esa fase");
+        }
         String id = servicioPartidos.generarIdPartidoExterno();
         
         PartidoExterno partido = new PartidoExterno(
             id,
             competencia.getId(),
             jornada,
+            ordenFase,
             competencia.getDeporte(),
             rivalLocal,
             rivalVisitante,
@@ -341,8 +354,14 @@ public class ServicioCompetencias {
 
     // tabla de posiciones
 
-    public List<FilaPosicion> tablaPosiciones(Competencia competencia) {
+    public List<FilaPosicion> tablaPosiciones(Competencia competencia, int ordenFase) {
         exigirCompetencia(competencia);
+        Fase fase = competencia.getFase(ordenFase);
+        if (fase == null || !fase.esLiga()) {
+            throw new ReglaDeNegocioException(
+                "No existe una tabla de posiciones para esa competencia"
+            );
+        }
         List<FilaPosicion> filas = new ArrayList<>();
 
         for (InscripcionCompetencia inscripcion : competencia.getInscripciones()) {
@@ -361,7 +380,7 @@ public class ServicioCompetencias {
         boolean hayPartidosJugados = false;
 
         for (PartidoCompetencia partido : partidos) {
-            if (partido.estaJugado()) {
+        	 if (partido.getOrdenFase() == ordenFase && partido.estaJugado()) {
                 hayPartidosJugados = true;
                 break;
             }
@@ -369,7 +388,7 @@ public class ServicioCompetencias {
 
         if (!hayPartidosJugados) {
             for (PartidoExterno partido : partidosExternos) {
-                if (partido.estaJugado()) {
+            	if (partido.getOrdenFase() == ordenFase && partido.estaJugado()) {
                     hayPartidosJugados = true;
                     break;
                 }
@@ -384,7 +403,7 @@ public class ServicioCompetencias {
 
         for (PartidoCompetencia partido : partidos) {
 
-            if (!partido.estaJugado()) {
+            if (partido.getOrdenFase() != ordenFase || !partido.estaJugado()) {
                 continue;
             }
 
@@ -430,7 +449,7 @@ public class ServicioCompetencias {
 
     for (PartidoExterno partido : partidosExternos) {
 
-        if (!partido.estaJugado()) {
+    	if (partido.getOrdenFase() != ordenFase || !partido.estaJugado()) {
             continue;
         }
 
