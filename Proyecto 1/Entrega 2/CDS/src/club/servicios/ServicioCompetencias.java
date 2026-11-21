@@ -21,6 +21,9 @@ import club.modelo.conjunto.InstitucionRival;
 import club.modelo.conjunto.Partido;
 import club.modelo.conjunto.PartidoCompetencia;
 import club.modelo.usuarios.Socio;
+import club.modelo.conjunto.Fase;
+import club.modelo.conjunto.TipoFase;
+import club.modelo.conjunto.PartidoExterno;
 
 // REGISTRAR COMPETENCIA, PARTIDOS, RIVALES, TABLAS DE POSICIONES
 public class ServicioCompetencias {
@@ -201,7 +204,7 @@ public class ServicioCompetencias {
     // registrar partido de competencia.
 
     public PartidoCompetencia registrarPartido(Competencia competencia, Equipo equipo,
-                                               String nombreRival, int jornada, boolean clubEsLocal,
+                                               String nombreRival, int jornada,int ordenFase, boolean clubEsLocal,
                                                String escenario, LocalDate fecha) {
     	exigirCompetencia(competencia);
 
@@ -227,12 +230,19 @@ public class ServicioCompetencias {
                 "La institución rival no está registrada en esta competencia"
             );
         }
+        
+        if (competencia.getFase(ordenFase) == null) {
+            throw new ReglaDeNegocioException(
+                    "La competencia no tiene esa fase"
+                );
+            }
         String id = servicioPartidos.generarIdPartidoCompetencia();
 
         PartidoCompetencia partido = new PartidoCompetencia(
             id,
             competencia.getId(),
             jornada,
+            ordenFase,
             inscripcion,
             rival,
             clubEsLocal,
@@ -277,10 +287,81 @@ public class ServicioCompetencias {
         return resultado;
     }
 
+    public PartidoExterno registrarPartidoExterno(
+            Competencia competencia,
+            String nombreRivalLocal,
+            String nombreRivalVisitante,
+            int jornada,
+            int ordenFase,
+            String escenario,
+            LocalDate fecha) {
+
+        exigirCompetencia(competencia);
+
+        InstitucionRival rivalLocal =
+            competencia.getRival(nombreRivalLocal);
+
+        InstitucionRival rivalVisitante =
+            competencia.getRival(nombreRivalVisitante);
+
+        if (rivalLocal == null || rivalVisitante == null) {
+            throw new ReglaDeNegocioException(
+                "Ambas instituciones deben estar registradas en esta competencia"
+            );
+        }
+        
+        if (competencia.getFase(ordenFase) == null) {
+            throw new ReglaDeNegocioException("La competencia no tiene esa fase");
+        }
+        String id = servicioPartidos.generarIdPartidoExterno();
+        
+        PartidoExterno partido = new PartidoExterno(
+            id,
+            competencia.getId(),
+            jornada,
+            ordenFase,
+            competencia.getDeporte(),
+            rivalLocal,
+            rivalVisitante,
+            escenario,
+            fecha
+        );
+
+        servicioPartidos.agregarPartidoExterno(partido);
+
+        return partido;
+    }
+
+
+    public void registrarResultadoExterno(PartidoExterno partido, int marcadorLocal, int marcadorVisitante) {
+        if (partido == null) {
+            throw new ReglaDeNegocioException("El partido es obligatorio");
+        }
+        partido.cerrar(marcadorLocal, marcadorVisitante);
+    }
+
+    public List<PartidoExterno> getPartidosExternosDe(Competencia competencia) {
+        exigirCompetencia(competencia);
+        List<PartidoExterno> resultado = new ArrayList<>();
+        for (Partido partido : servicioPartidos.getPartidos()) {
+            if (partido instanceof PartidoExterno
+                    && ((PartidoExterno) partido).getIdCompetencia().equals(competencia.getId())) {
+                resultado.add((PartidoExterno) partido);
+            }
+        }
+        return resultado;
+    }
+
     // tabla de posiciones
 
-    public List<FilaPosicion> tablaPosiciones(Competencia competencia) {
-    	exigirCompetencia(competencia);
+    public List<FilaPosicion> tablaPosiciones(Competencia competencia, int ordenFase) {
+        exigirCompetencia(competencia);
+        Fase fase = competencia.getFase(ordenFase);
+        if (fase == null || !fase.esLiga()) {
+            throw new ReglaDeNegocioException(
+                "No existe una tabla de posiciones para esa competencia"
+            );
+        }
         List<FilaPosicion> filas = new ArrayList<>();
 
         for (InscripcionCompetencia inscripcion : competencia.getInscripciones()) {
@@ -292,14 +373,25 @@ public class ServicioCompetencias {
         for (InstitucionRival rival : competencia.getRivales()) {
             filas.add(new FilaPosicion(rival.getNombre(), false));
         }
+
         List<PartidoCompetencia> partidos = getPartidosDe(competencia);
+        List<PartidoExterno> partidosExternos = getPartidosExternosDe(competencia);
 
         boolean hayPartidosJugados = false;
 
         for (PartidoCompetencia partido : partidos) {
-            if (partido.estaJugado()) {
+        	 if (partido.getOrdenFase() == ordenFase && partido.estaJugado()) {
                 hayPartidosJugados = true;
                 break;
+            }
+        }
+
+        if (!hayPartidosJugados) {
+            for (PartidoExterno partido : partidosExternos) {
+            	if (partido.getOrdenFase() == ordenFase && partido.estaJugado()) {
+                    hayPartidosJugados = true;
+                    break;
+                }
             }
         }
 
@@ -308,9 +400,10 @@ public class ServicioCompetencias {
                 "Aún no hay partidos jugados en esta competencia"
             );
         }
+
         for (PartidoCompetencia partido : partidos) {
 
-            if (!partido.estaJugado()) {
+            if (partido.getOrdenFase() != ordenFase || !partido.estaJugado()) {
                 continue;
             }
 
@@ -353,30 +446,79 @@ public class ServicioCompetencias {
                 competencia.getDeporte().puntosPara(marcadorRival, marcadorClub)
             );
         }
-        filas.sort((f1, f2) -> {
 
-            int comparacionPuntos =
-                Integer.compare(f2.getPuntos(), f1.getPuntos());
+    for (PartidoExterno partido : partidosExternos) {
 
-            if (comparacionPuntos != 0) {
-                return comparacionPuntos;
+    	if (partido.getOrdenFase() != ordenFase || !partido.estaJugado()) {
+            continue;
+        }
+
+        int marcadorLocal = partido.getMarcadorLocal();
+        int marcadorVisitante = partido.getMarcadorVisitante();
+
+        String nombreLocal = partido.getRivalLocal().getNombre();
+        String nombreVisitante = partido.getRivalVisitante().getNombre();
+
+        FilaPosicion filaLocal = null;
+        FilaPosicion filaVisitante = null;
+
+        for (FilaPosicion fila : filas) {
+
+            if (!fila.esClub()
+                    && fila.getNombre().equalsIgnoreCase(nombreLocal)) {
+                filaLocal = fila;
             }
 
-            int comparacionDiferencia =
-                Integer.compare(f2.getDiferencia(), f1.getDiferencia());
-
-            if (comparacionDiferencia != 0) {
-                return comparacionDiferencia;
+            if (!fila.esClub()
+                    && fila.getNombre().equalsIgnoreCase(nombreVisitante)) {
+                filaVisitante = fila;
             }
+        }
 
-            return Integer.compare(
-                f2.getGolesFavor(),
-                f1.getGolesFavor()
+        if (filaLocal == null || filaVisitante == null) {
+            throw new ReglaDeNegocioException(
+                "No se encontraron los equipos del partido en la tabla"
             );
-        });
+        }
 
-        return filas;
+        filaLocal.registrar(
+            marcadorLocal,
+            marcadorVisitante,
+            competencia.getDeporte().puntosPara(marcadorLocal, marcadorVisitante)
+        );
+
+        filaVisitante.registrar(
+            marcadorVisitante,
+            marcadorLocal,
+            competencia.getDeporte().puntosPara(marcadorVisitante, marcadorLocal)
+        );
     }
+
+    filas.sort((f1, f2) -> {
+
+        int comparacionPuntos =
+            Integer.compare(f2.getPuntos(), f1.getPuntos());
+
+        if (comparacionPuntos != 0) {
+            return comparacionPuntos;
+        }
+
+        int comparacionDiferencia =
+            Integer.compare(f2.getDiferencia(), f1.getDiferencia());
+
+        if (comparacionDiferencia != 0) {
+            return comparacionDiferencia;
+        }
+
+        return Integer.compare(
+            f2.getGolesFavor(),
+            f1.getGolesFavor()
+        );
+    });
+
+    return filas;
+}
+
 
     // estadisticas acumuladas
 
@@ -476,5 +618,13 @@ public class ServicioCompetencias {
         if (competencia == null || !competencias.contains(competencia)) {
             throw new ReglaDeNegocioException("La competencia no existe");
         }
+    }
+    
+    public Fase definirFase(Competencia competencia, int orden, String nombre,
+                            TipoFase tipo, int clasificados) {
+        exigirCompetencia(competencia);
+        Fase fase = new Fase(orden, nombre, tipo, clasificados);
+        competencia.agregarFase(fase);
+        return fase;
     }
 }

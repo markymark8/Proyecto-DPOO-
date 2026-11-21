@@ -9,33 +9,35 @@ public class PartidoCompetencia extends Partido {
 
     private final String idCompetencia;
     private final int jornada;
+    private final int ordenFase;
     private final InscripcionCompetencia inscripcion;
     private final InstitucionRival rival;
     private final boolean clubEsLocal;
     private final String escenario;
 
-    public PartidoCompetencia(String id, String idCompetencia, int jornada,
+    public PartidoCompetencia(String id, String idCompetencia, int jornada,int ordenFase,
                               InscripcionCompetencia inscripcion, InstitucionRival rival,
                               boolean clubEsLocal, String escenario, LocalDate fecha) {
         super(id, deporteDe(inscripcion), fecha);
-        validar(idCompetencia, jornada, inscripcion, rival, escenario);
+        validar(idCompetencia, jornada, ordenFase, inscripcion, rival, escenario);
         this.idCompetencia = idCompetencia;
         this.jornada = jornada;
+        this.ordenFase = ordenFase;
         this.inscripcion = inscripcion;
         this.rival = rival;
         this.clubEsLocal = clubEsLocal;
         this.escenario = escenario;
     }
 
-    /** Constructor de restauracion (lo usa el repositorio al cargar). */
-    public PartidoCompetencia(String id, String idCompetencia, int jornada,
+    public PartidoCompetencia(String id, String idCompetencia, int jornada, int ordenFase,
                               InscripcionCompetencia inscripcion, InstitucionRival rival,
                               boolean clubEsLocal, String escenario, LocalDate fecha,
                               EstadoPartido estado, int marcadorLocal, int marcadorVisitante) {
         super(id, deporteDe(inscripcion), fecha, estado, marcadorLocal, marcadorVisitante);
-        validar(idCompetencia, jornada, inscripcion, rival, escenario);
+        validar(idCompetencia, jornada, ordenFase, inscripcion, rival, escenario);
         this.idCompetencia = idCompetencia;
         this.jornada = jornada;
+        this.ordenFase = ordenFase;
         this.inscripcion = inscripcion;
         this.rival = rival;
         this.clubEsLocal = clubEsLocal;
@@ -50,12 +52,10 @@ public class PartidoCompetencia extends Partido {
     public boolean clubEsLocal() { return clubEsLocal; }
     public String getEscenario() { return escenario; }
 
-    /** Marcador del equipo del club, sin importar si juega de local o de visitante. */
     public int getMarcadorClub() {
         return clubEsLocal ? getMarcadorLocal() : getMarcadorVisitante();
     }
 
-    /** Marcador de la institucion rival. */
     public int getMarcadorRival() {
         return clubEsLocal ? getMarcadorVisitante() : getMarcadorLocal();
     }
@@ -74,8 +74,11 @@ public class PartidoCompetencia extends Partido {
         }
         return inscripcion.getEquipo().getDeporte();
     }
+    public int getOrdenFase() {
+        return ordenFase;
+    }
 
-    private static void validar(String idCompetencia, int jornada, InscripcionCompetencia inscripcion,
+    private static void validar(String idCompetencia, int jornada, int ordenFase, InscripcionCompetencia inscripcion,
                                 InstitucionRival rival, String escenario) {
     	if (idCompetencia == null || idCompetencia.isBlank()) {
             throw new ReglaDeNegocioException(
@@ -106,6 +109,11 @@ public class PartidoCompetencia extends Partido {
                 "El escenario del partido es obligatorio"
             );
         }
+        if (ordenFase <= 0) {
+            throw new ReglaDeNegocioException(
+                    "El orden de la fase debe ser mayor que cero"
+                );
+            }
 
         if (escenario.contains(";")) {
             throw new ReglaDeNegocioException(
