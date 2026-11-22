@@ -81,7 +81,7 @@ public class ServicioIndividual {
     }
 
     
-    /* Este método verifica que si la condicion no se cumple, rechaza la operacion */
+    
     private void exigir(boolean condicion, String motivo) {
         if (!condicion) {
             throw new ReglaDeNegocioException(motivo);
@@ -182,6 +182,23 @@ public class ServicioIndividual {
         exigir(entrenador != null, "Solo un entrenador puede asignar niveles");
         InscripcionAcademia inscripcion = buscarAcademia(disciplina).getInscripcionDe(socio);
         inscripcion.asignarNivel(nivel);
+    }
+    
+    public Instalacion registrarInstalacion(int codigo, String nombre, String disciplina, int capacidad,
+            boolean techada) {
+        for (Instalacion i : instalaciones) {
+            exigir(i.getCodigo() != codigo, "Ya existe una instalacion con el codigo " + codigo);
+        }
+        exigir(nombre != null && !nombre.trim().isEmpty(), "La instalacion necesita un nombre");
+        exigir(!"PADEL".equals(disciplina) || capacidad == 4,
+                "Una cancha de padel siempre es de dobles: capacidad 4 (recibida: " + capacidad + ")");
+        boolean tenisOMesa = "TENIS".equals(disciplina) || "TENIS_DE_MESA".equals(disciplina);
+        exigir(!tenisOMesa || capacidad == 2 || capacidad == 4,
+                "La capacidad en " + disciplina + " debe ser 2 o 4 (recibida: " + capacidad + ")");
+        exigir(capacidad > 0, "La capacidad debe ser positiva");
+        Instalacion nueva = new Instalacion(codigo, nombre, disciplina, capacidad, techada, true);
+        instalaciones.add(nueva);
+        return nueva;
     }
 
     // ================= Reservas (P2) =================
