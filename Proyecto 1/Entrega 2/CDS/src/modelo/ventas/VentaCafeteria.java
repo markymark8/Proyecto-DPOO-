@@ -204,11 +204,18 @@ if (contieneSnack && !alergenosInformados) {
     setDescuento(0);
 
     
+
     if (comprador instanceof Socio) {
-        ((Socio) comprador).agregarVenta(this);
+
+    	setSocio((Socio) comprador);
+    	((Socio) comprador).agregarVenta(this);
+
     } else if (comprador instanceof Empleado) {
-        ((Empleado) comprador).agregarVenta(this);
+
+    	setEmpleado((Empleado) comprador);
+    	((Empleado) comprador).agregarVenta(this);
     }
+
 
     confirmada = true;
 }

@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import modelo.tienda.Articulo;
 import club.servicios.ReglaDeNegocioException;
 import club.modelo.usuarios.Comprador;
-import club.modelo.usuarios.Empleado;
+
+
+
 
 public class VentaTienda extends venta{
 	
@@ -232,17 +234,30 @@ public void confirmarVenta(Comprador comprador,
     puntosRedimidos = puntosUsar;
 
 
-    if (comprador instanceof Socio) {
-        ((Socio) comprador).agregarVenta(this);
-    } else if (comprador instanceof Empleado) {
-        ((Empleado) comprador).agregarVenta(this);
+
+
+if (comprador instanceof Socio) {
+
+    setSocio((Socio) comprador);
+    ((Socio) comprador).agregarVenta(this);
+
+} else if (comprador instanceof Empleado) {
+
+    setEmpleado((Empleado) comprador);
+    ((Empleado) comprador).agregarVenta(this);
+}
+
+	confirmada = true;
+	
+}
+
+
+
+    public boolean isConfirmada() {
+    	return confirmada;
     }
 
-    confirmada = true;
-}
 
-public boolean isConfirmada() {
-    return confirmada;
-}
+
 
 }

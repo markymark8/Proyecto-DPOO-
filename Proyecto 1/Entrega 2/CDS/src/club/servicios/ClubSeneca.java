@@ -12,6 +12,8 @@ import club.persistencia.RepositorioConjunto;
 import club.persistencia.RepositorioPartidos;
 import club.persistencia.RepositorioEstadisticas;
 import club.persistencia.RepositorioComercio;
+import java.util.ArrayList;
+import club.modelo.usuarios.Empleado;
 
 
 
@@ -105,4 +107,21 @@ public ServicioIndividual getServicioIndividual() {
         RepositorioEstadisticas.guardar(carpetaDatos, this);
         RepositorioComercio.guardar(carpetaDatos, this);
     }
+    
+    
+
+    public ArrayList<Empleado> getEmpleados() {
+
+    	ArrayList<Empleado> empleados = new ArrayList<>();
+
+    	for (Usuario usuario : usuarios.values()) {
+
+    		if (usuario instanceof Empleado) {
+    			empleados.add((Empleado) usuario);
+    		}
+    	}
+
+    	return empleados;
+}
+
 }

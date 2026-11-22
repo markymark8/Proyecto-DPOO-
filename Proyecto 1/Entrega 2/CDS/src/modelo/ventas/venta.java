@@ -73,6 +73,14 @@ public void setPuntos(double puntos) {
 
     this.puntos = puntos;
 }
+
+public void setSocio(Socio socio) {
+    this.socio = socio;
+}
+
+public void setEmpleado(Empleado empleado) {
+    this.empleado = empleado;
+}
 	
 
 }
