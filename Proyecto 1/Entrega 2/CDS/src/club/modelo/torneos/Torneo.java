@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import club.servicios.ReglaDeNegocioException;
 import java.time.LocalDate;
+import club.modelo.usuarios.Usuario;
 
 public abstract class Torneo {
 
@@ -140,6 +141,10 @@ public abstract class Torneo {
 	}
 
 	public abstract int getTarifaInscripcion();
+	
+	public boolean isPreferencialesLiberados() {
+	    return preferencialesLiberados;
+	}
 
 	public void retirar(String identificador) {
 
@@ -192,6 +197,17 @@ public abstract class Torneo {
 			if (existente.getIdentificador().equals(inscripcion.getIdentificador())) {
 				throw new ReglaDeNegocioException("El participante ya está inscrito en este torneo");
 			}
+		}
+		
+		for (InscripcionTorneo existente : inscripciones) {
+		    for (Usuario yaInscrito : existente.getParticipantes()) {
+		        for (Usuario nuevo : inscripcion.getParticipantes()) {
+		            if (yaInscrito.getLogin().equals(nuevo.getLogin())) {
+		                throw new ReglaDeNegocioException(
+		                    "El participante " + nuevo.getLogin() + " ya está inscrito en este torneo");
+		            }
+		        }
+		    }
 		}
 		int np = contarInscripcionesPreferenciales();
 		int nr = contarInscripcionesRegulares();
@@ -265,6 +281,36 @@ public abstract class Torneo {
 		}
 
 		estado = EstadoTorneo.FINALIZADO;
+	}
+	
+	// PERSISTENCIA
+	
+	public void restaurarEstado(
+	    EstadoTorneo estado,
+	    boolean preferencialesLiberados
+	) {
+
+	    if (estado == null) {
+	        throw new ReglaDeNegocioException(
+	            "El estado del torneo no puede ser nulo."
+	        );
+	    }
+
+	    this.estado = estado;
+	    this.preferencialesLiberados = preferencialesLiberados;
+	}
+	
+	public void agregarInscripcionCargada(
+	    InscripcionTorneo inscripcion
+	) {
+
+	    if (inscripcion == null) {
+	        throw new ReglaDeNegocioException(
+	            "La inscripción no puede ser nula."
+	        );
+	    }
+
+	    inscripciones.add(inscripcion);
 	}
 
 }
