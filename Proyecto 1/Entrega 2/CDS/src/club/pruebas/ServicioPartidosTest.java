@@ -1,5 +1,5 @@
 
-package club.servicios;
+package club.pruebas;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import club.modelo.conjunto.*;
 import club.modelo.usuarios.Socio;
+import club.servicios.ReglaDeNegocioException;
+import club.servicios.ServicioPartidos;
 
 public class ServicioPartidosTest {
 
@@ -541,7 +543,4 @@ public class ServicioPartidosTest {
 
         assertEquals(1, partido.getEstadisticas().size());
     }
-    
-
-
 }

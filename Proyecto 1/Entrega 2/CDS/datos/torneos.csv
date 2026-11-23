@@ -1,0 +1,4 @@
+id;nombre;tipo;modalidad;disciplina;categoria;cupos;fecha;tarifa;estado;preferencialesLiberados
+TN-001;Copa Seneca de Futbol;RECREATIVO;CONJUNTO;FUTBOL;MAYORES;8;2026-12-05;0;EN_INSCRIPCION;false
+TN-002;Torneo Relampago de Tenis;COMPETITIVO;INDIVIDUAL;TENIS;INTERMEDIO;8;2026-12-12;20000;EN_INSCRIPCION;false
+TN-003;Liga Interna de Futbol;RECREATIVO;CONJUNTO;FUTBOL;MAYORES;4;2026-10-15;0;FINALIZADO;true

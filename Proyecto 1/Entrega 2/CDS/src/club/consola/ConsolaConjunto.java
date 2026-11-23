@@ -31,6 +31,9 @@ import club.servicios.ReglaDeNegocioException;
 import club.servicios.ServicioCompetencias;
 import club.servicios.ServicioConjunto;
 import club.servicios.ServicioPartidos;
+import club.modelo.conjunto.PartidoExterno;
+import club.modelo.conjunto.Fase;
+import club.modelo.conjunto.TipoFase;
 
 /** Menu del modulo de deportes de conjunto y competencias. */
 public class ConsolaConjunto {
@@ -89,6 +92,9 @@ public class ConsolaConjunto {
             System.out.println("19. Ver tabla de posiciones");
             System.out.println("20. Ver estadisticas acumuladas de una competencia");
             System.out.println("21. Listar competencias");
+            System.out.println("22. Definir fase de competencia.");
+            System.out.println("23. Registrar partido entre rivales");
+            System.out.println("24. Registrar resultado de partido entre rivales");
         }
         System.out.println("0. Salir");
         System.out.print("Opcion: ");
@@ -187,6 +193,20 @@ public class ConsolaConjunto {
             case "21":
                 exigirAdmin(usuario);
                 listarCompetencias();
+                break;
+                
+            case "22":
+                exigirAdmin(usuario);
+                definirFase();
+                break;
+            case "23":
+                exigirAdmin(usuario);
+                registrarPartidoExterno();
+                break;
+
+            case "24":
+                exigirAdmin(usuario);
+                registrarResultadoExterno();
                 break;
             default:
                 System.out.println("Opcion no valida");
@@ -437,6 +457,12 @@ public class ConsolaConjunto {
             enfrentamiento = c.getNombreLocal() + " vs " + c.getNombreVisitante()
                     + " [" + c.getIdCompetencia() + ", jornada " + c.getJornada()
                     + ", " + c.getEscenario() + "]";
+        } 
+        else if (p instanceof PartidoExterno) {
+            PartidoExterno e = (PartidoExterno) p;
+            enfrentamiento = e.getRivalLocal().getNombre() + " vs " + e.getRivalVisitante().getNombre()
+            + " [" + e.getIdCompetencia() + ", jornada " + e.getJornada()
+            + ", " + e.getEscenario() + "]";
         }
         return p.getId() + " | " + enfrentamiento + " | " + p.getFecha() + " | " + p.getEstado()
                 + (p.estaJugado() ? " | " + p.getMarcadorLocal() + "-" + p.getMarcadorVisitante() : "");
@@ -486,13 +512,57 @@ public class ConsolaConjunto {
         Equipo equipo = pedirEquipo("Id del equipo del club: ");
         String rival = leer("Institucion rival: ");
         int jornada = leerEntero("Jornada: ");
+        int ordenFase = leerEntero("Fase (orden): "); 
         boolean local = leer("El club juega de local? (s/n): ").equalsIgnoreCase("s");
         String escenario = leer("Escenario: ");
         LocalDate fecha = LocalDate.parse(leer("Fecha (yyyy-MM-dd): "));
         PartidoCompetencia partido = club.getServicioCompetencias()
-                .registrarPartido(competencia, equipo, rival, jornada, local, escenario, fecha);
+                .registrarPartido(competencia, equipo, rival, jornada,ordenFase, local, escenario, fecha);
         System.out.println(">> Partido de competencia registrado: " + partido.getId()
                 + ". Registra las estadisticas (opcion 12) antes del resultado (opcion 18).");
+    }
+    private void registrarPartidoExterno() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+
+        String rivalLocal = leer("Institucion rival local: ");
+        String rivalVisitante = leer("Institucion rival visitante: ");
+
+        int jornada = leerEntero("Jornada: ");
+        int ordenFase = leerEntero("Fase (orden): ");
+
+        String escenario = leer("Escenario: ");
+        LocalDate fecha = LocalDate.parse(leer("Fecha (yyyy-MM-dd): "));
+
+        PartidoExterno partido = club.getServicioCompetencias()
+                .registrarPartidoExterno(
+                        competencia, rivalLocal, rivalVisitante,
+                        jornada, ordenFase, escenario, fecha);
+
+        System.out.println(">> Partido entre rivales registrado: " + partido.getId());
+    }
+    
+    private void definirFase() {
+        Competencia competencia = pedirCompetencia("Id de la competencia: ");
+        int orden = leerEntero("Orden de la fase: ");
+        String nombre = leer("Nombre de la fase: ");
+        TipoFase tipo = TipoFase.valueOf(leer("Tipo (LIGA/ELIMINACION): ").toUpperCase());
+        int clasificados = leerEntero("Equipos que clasifican (0 si es eliminacion): ");
+        Fase fase = club.getServicioCompetencias()
+                .definirFase(competencia, orden, nombre, tipo, clasificados);
+        System.out.println(">> Fase " + fase.getOrden() + " (" + fase.getNombre() + ", "
+                + fase.getTipo() + ") definida en " + competencia.getId());
+    }
+    
+    private void registrarResultadoExterno() {
+        Partido partido = pedirPartidoCualquiera("Id del partido entre rivales: ");
+        if (!(partido instanceof PartidoExterno)) {
+            throw new ReglaDeNegocioException("No existe el partido entre rivales " + partido.getId());
+        }
+        int marcadorLocal = leerEntero("Marcador del local: ");
+        int marcadorVisitante = leerEntero("Marcador del visitante: ");
+        club.getServicioCompetencias()
+                .registrarResultadoExterno((PartidoExterno) partido, marcadorLocal, marcadorVisitante);
+        System.out.println(">> Resultado registrado: " + marcadorLocal + " - " + marcadorVisitante);
     }
 
     private void registrarResultadoCompetencia() {
@@ -509,7 +579,8 @@ public class ConsolaConjunto {
     /** HDU 8: tabla de posiciones de una competencia. */
     private void verTablaPosiciones() {
         Competencia competencia = pedirCompetencia("Id de la competencia: ");
-        List<FilaPosicion> filas = club.getServicioCompetencias().tablaPosiciones(competencia);
+        int ordenFase = leerEntero("Fase (orden): ");
+        List<FilaPosicion> filas = club.getServicioCompetencias().tablaPosiciones(competencia,ordenFase);
         System.out.println("Tabla de " + competencia.getNombre() + " (" + competencia.getTemporada()
                 + ")  [* = equipo del club]");
         System.out.printf("%-3s %-28s %3s %3s %3s %3s %4s %4s %4s %4s%n",

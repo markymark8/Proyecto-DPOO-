@@ -1,0 +1,7 @@
+idTorneo;tipo;idEquipo;participantes;preferencial;puntajeRanking
+TN-001;EQUIPO;EQ-001;jug01,jug02,jug03,jug04,jug11,jug12,jug13,jug14;false;0
+TN-001;EQUIPO;EQ-006;jug15,jug16,jug17,jug18,jug19,jug20,jug21,jug22;false;0
+TN-002;INDIVIDUAL;;jug01;true;1200
+TN-002;INDIVIDUAL;;jug02;false;1000
+TN-003;EQUIPO;EQ-001;jug01,jug02,jug03,jug04,jug11,jug12,jug13,jug14;false;0
+TN-003;EQUIPO;EQ-006;jug15,jug16,jug17,jug18,jug19,jug20,jug21,jug22;false;0
