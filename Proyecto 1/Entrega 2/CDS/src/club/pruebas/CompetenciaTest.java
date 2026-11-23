@@ -1,4 +1,4 @@
-package club.modelo.conjunto;
+package club.pruebas;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -7,6 +7,13 @@ import org.junit.jupiter.api.Test;
 import club.servicios.ReglaDeNegocioException;
 import java.util.ArrayList;
 import java.util.List;
+
+import club.modelo.conjunto.Categoria;
+import club.modelo.conjunto.Competencia;
+import club.modelo.conjunto.Deporte;
+import club.modelo.conjunto.Equipo;
+import club.modelo.conjunto.InscripcionCompetencia;
+import club.modelo.conjunto.InstitucionRival;
 import club.modelo.usuarios.Socio;
 import java.time.LocalDate;
 
