@@ -397,7 +397,7 @@ public class TorneosTest {
 	// test 9 cupos preferenciales (20%)
 
 	@Test
-	void t9_cuposPreferencialesSonElVeintePorCientoRedondeadoArriba() {
+	void t9_cuposPreferencialesSonElVeintePorCiento() {
 		int[][] casos = { { 2, 1 }, { 5, 1 }, { 6, 2 }, { 10, 2 }, { 21, 5 } };
 		for (int[] caso : casos) {
 			Torneo t = torneoIndividual(caso[0]);
@@ -464,6 +464,11 @@ public class TorneosTest {
 		Socio mariaCargada = new Socio("maria", "maria", Usuario.hash("1234"), LocalDate.of(2000, 1, 1));
 
 		clubCargado.registrarUsuario(mariaCargada);
+		
+		clubCargado.registrarUsuario(
+		        new Socio("guillermo", "guillermo", Usuario.hash("1234"), LocalDate.of(2000, 1, 1)));
+		clubCargado.registrarUsuario(
+		        new Socio("camila", "camila", Usuario.hash("1234"), LocalDate.of(2000, 1, 1)));
 
 		clubCargado.cargar(carpeta);
 

@@ -67,6 +67,7 @@ public class SesionEntrenamientoTest {
 
 	@Test
 	public void registrarFeedbackInvalidoTest() {
+		setup();
 		
 		try {
 			sesion.registrarFeedback(pedro, EstadoAsistencia.ASISTIO, 4, "");

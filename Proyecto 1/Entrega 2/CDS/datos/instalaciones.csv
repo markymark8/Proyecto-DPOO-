@@ -1,3 +1,4 @@
-codigo,nombre,disciplina,capacidad,techada
-1,Cancha 1,TENIS,4,false
-2,Cancha 2,TENIS,4,false
+codigo;nombre;disciplina;capacidad;techada;habilitada
+1;Cancha de tenis 1;TENIS;2;false;true
+2;Cancha de tenis 2;TENIS;4;true;true
+3;Cancha de padel 1;PADEL;4;false;true

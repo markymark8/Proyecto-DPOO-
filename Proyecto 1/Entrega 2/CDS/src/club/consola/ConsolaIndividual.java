@@ -1,399 +1,239 @@
-
 package club.consola;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
-import club.servicios.ClubSeneca;
-import club.servicios.ServicioIndividual;
-import club.servicios.ReglaDeNegocioException;
-import club.modelo.individual.*;
-import club.modelo.usuarios.Socio;
-import club.modelo.usuarios.Administrador;
+import club.modelo.individual.BloqueHorario;
+import club.modelo.individual.Disciplina;
+import club.modelo.individual.Instalacion;
+import club.modelo.individual.Modalidad;
+import club.modelo.individual.PartidoPractica;
+import club.modelo.individual.Reserva;
 import club.modelo.usuarios.Entrenador;
-
+import club.modelo.usuarios.Socio;
+import club.modelo.usuarios.Usuario;
+import club.servicios.ClubSeneca;
+import club.servicios.ReglaDeNegocioException;
+import club.servicios.ServicioIndividual;
 
 public class ConsolaIndividual {
 
-    private static ClubSeneca club = new ClubSeneca();
-    private static ServicioIndividual servicio =
-            club.getServicioIndividual();
+    private final ClubSeneca club;
+    private final ServicioIndividual servicio;
+    private final Scanner in;
 
-    private static Scanner scanner = new Scanner(System.in);
+    public ConsolaIndividual(ClubSeneca club, Scanner in) {
+        this.club = club;
+        this.servicio = club.getServicioIndividual();
+        this.in = in;
+    }
 
-    private static Socio socio;
-    private static Instalacion instalacion;
-    private static Reserva reserva;
-    private static Socio socio2;
-    private static PartidoPractica partido;
-    private static SesionEntrenamiento sesion;
-    private static Entrenador entrenador;
-
-
-    public static void main(String[] args) {
-
-        prepararDatos();
-
-        int opcion = -1;
-
-        while (opcion != 0) {
-
-            System.out.println("\n=== CONSOLA DE RESERVAS ===");
-            System.out.println("1. Crear reserva");
-            System.out.println("2. Consultar reservas");
-            System.out.println("3. Registrar ingreso");
-            System.out.println("4. Cancelar reserva");
-            System.out.println("5. Programar partido de practica");
-            System.out.println("6. Consultar partidos");
-            System.out.println("7. Registrar resultado");
-            System.out.println("8. Consultar ranking");
-            System.out.println("9. Programar sesion de entrenamiento");
-            System.out.println("10. Consultar sesiones");
-            System.out.println("11. Registrar asistencia y feedback");
-            System.out.println("12. Consultar reporte de asistencia");
-            System.out.println("0. Salir");
-            System.out.print("Seleccione una opcion: ");
-
+    public void ejecutar(Usuario usuario) {
+        boolean salir = false;
+        while (!salir) {
+            mostrarMenu(usuario);
+            String opcion = in.nextLine().trim();
             try {
-                opcion = Integer.parseInt(scanner.nextLine());
-
-                switch (opcion) {
-                    case 1:
-                        crearReserva();
-                        break;
-                    case 2:
-                        consultarReservas();
-                        break;
-                    case 3:
-                        registrarIngreso();
-                        break;
-                    case 4:
-                        cancelarReserva();
-                        break;
-                    case 5:
-                        programarPartido();
-                        break;
-
-                    case 6:
-                        consultarPartidos();
-                        break;
-
-                    case 7:
-                        registrarResultado();
-                        break;
-
-                    case 8:
-                        consultarRanking();
-                        break;
-                    case 9:
-                        programarSesion();
-                        break;
-
-                    case 10:
-                        consultarSesiones();
-                        break;
-
-                    case 11:
-                        registrarFeedback();
-                        break;
-
-                    case 12:
-                        consultarAsistencia();
-                        break;
-                    case 0:
-                        System.out.println("Fin de la prueba.");
-                        break;
-                    default:
-                        System.out.println("Opcion invalida.");
-                }
-
+                salir = procesar(opcion, usuario);
             } catch (ReglaDeNegocioException e) {
-                System.out.println("Operacion rechazada: " + e.getMessage());
-            } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+                System.out.println(">> RECHAZADO: " + e.getMessage());
+            } catch (IllegalArgumentException | DateTimeParseException e) {
+                System.out.println(">> DATO INVALIDO: " + e.getMessage());
             }
         }
-
-        scanner.close();
     }
 
-    private static void prepararDatos() {
+    // ------------------------------------------------------------------ menu
 
-        socio = new Socio(
-            "socio1", "Mariana", "1234",
-            LocalDate.of(2004, 5, 10)
-        );
-
-        club.registrarUsuario(socio);
-
-        Academia academia = new Academia(Disciplina.TENIS, 2);
-        servicio.getAcademias().add(academia);
-       
-
-        instalacion = new Instalacion(
-            1, "Cancha de tenis 1", "TENIS",
-            2, false, true
-        );
-
-        servicio.getInstalaciones().add(instalacion);
-
-        servicio.inscribirEnAcademia(socio, Disciplina.TENIS);
-        
-        socio2 = new Socio(
-        	    "socio2", "Camilo", "1234",
-        	    LocalDate.of(2003, 8, 15)
-        	);
-
-        	club.registrarUsuario(socio2);
-
-        	servicio.inscribirEnAcademia(socio2, Disciplina.TENIS);
-        	
-        entrenador = new Entrenador(
-        		    "entrenador1",
-        		    "Andres",
-        		    "1234",
-        		    "DESC10",
-        		    101
-        		);
-
-        		club.registrarUsuario(entrenador);
-
-        System.out.println("Datos de prueba preparados.");
+    private void mostrarMenu(Usuario usuario) {
+        System.out.println();
+        System.out.println("=== DEPORTES INDIVIDUALES (" + usuario.getNombre() + ") ===");
+        System.out.println("1. Listar instalaciones");
+        if (!usuario.esAdministrador()) {
+            System.out.println("2. Crear reserva");
+            System.out.println("3. Ver mis reservas");
+            System.out.println("4. Cancelar una reserva");
+        }
+        if (usuario instanceof Socio) {
+            System.out.println("5. Registrar ingreso a una reserva");
+            System.out.println("6. Consultar mi ranking");
+            System.out.println("7. Consultar partidos de practica");
+            // TODO (Daniel): 8. Programar partido de practica
+            // TODO (Daniel): 9. Ver mis estadisticas
+        }
+        if (usuario instanceof Entrenador) {
+            // TODO (Daniel): 10. Programar sesion de entrenamiento
+            // TODO (Daniel): 11. Registrar asistencia y feedback
+        }
+        if (usuario.esAdministrador()) {
+            System.out.println("12. Reporte de asistencia");
+            System.out.println("14. Registrar instalacion");
+            // TODO (Daniel): 13. Registrar resultado de un partido de practica
+        }
+        System.out.println("0. Volver");
+        System.out.print("Opcion: ");
     }
 
-    private static void crearReserva() {
-
-        System.out.println("\n--- CREAR RESERVA ---");
-
-        LocalDate fecha = LocalDate.now().plusDays(1);
-
-        BloqueHorario bloque = new BloqueHorario(
-            fecha,
-            LocalTime.of(10, 0),
-            LocalTime.of(11, 0)
-        );
-
-        reserva = servicio.reservar(
-            socio,
-            instalacion,
-            bloque,
-            2,
-            Modalidad.SENCILLOS
-        );
-
-        System.out.println(
-            "Reserva creada con ID: " + reserva.getId()
-        );
+    private boolean procesar(String opcion, Usuario usuario) {
+        switch (opcion) {
+            case "0": return true;
+            case "1": listarInstalaciones(); break;
+            case "2": crearReserva(usuario); break;
+            case "3": verMisReservas(usuario); break;
+            case "4": cancelarReserva(usuario); break;
+            case "5": registrarIngreso(usuario); break;
+            case "6": consultarRanking(usuario); break;
+            case "7": consultarPartidos(); break;
+            case "12": reporteAsistencia(usuario); break;
+            case "14": registrarInstalacion(usuario); break;
+            default: System.out.println("Opcion invalida.");
+        }
+        return false;
     }
 
-    private static void consultarReservas() {
+    // ------------------------------------------------------- lectura de datos
 
-        System.out.println("\n--- HISTORIAL DE RESERVAS ---");
+    private String leer(String mensaje) {
+        System.out.print(mensaje + ": ");
+        return in.nextLine().trim();
+    }
 
+    private int leerEntero(String mensaje) {
+        return Integer.parseInt(leer(mensaje));
+    }
+
+    private Instalacion exigirInstalacion(int codigo) {
+        for (Instalacion i : servicio.getInstalaciones()) {
+            if (i.getCodigo() == codigo) {
+                return i;
+            }
+        }
+        throw new ReglaDeNegocioException("No existe la instalacion " + codigo);
+    }
+
+    private Reserva exigirReserva(int id) {
+        for (Reserva r : servicio.getReservas()) {
+            if (r.getId() == id) {
+                return r;
+            }
+        }
+        throw new ReglaDeNegocioException("No existe la reserva " + id);
+    }
+
+    private static Socio comoSocio(Usuario usuario) {
+        if (!(usuario instanceof Socio)) {
+            throw new ReglaDeNegocioException("Esta opcion es solo para socios");
+        }
+        return (Socio) usuario;
+    }
+
+    // operaciones
+
+    private void listarInstalaciones() {
+        if (servicio.getInstalaciones().isEmpty()) {
+            System.out.println("No hay instalaciones registradas.");
+            return;
+        }
+        for (Instalacion i : servicio.getInstalaciones()) {
+            System.out.println(i.getCodigo() + ". " + i.getNombre()
+                    + " | " + i.getDisciplina()
+                    + " | capacidad " + i.getCapacidad()
+                    + " | techada: " + (i.isTechada() ? "si" : "no")
+                    + " | habilitada: " + (i.isHabilitada() ? "si" : "no"));
+        }
+    }
+
+    private void crearReserva(Usuario usuario) {
+        listarInstalaciones();
+        Instalacion instalacion = exigirInstalacion(leerEntero("Codigo de la instalacion"));
+        LocalDate fecha = LocalDate.parse(leer("Fecha (yyyy-MM-dd)"));
+        LocalTime inicio = LocalTime.parse(leer("Hora de inicio (HH:mm)"));
+        LocalTime fin = LocalTime.parse(leer("Hora de fin (HH:mm)"));
+        int jugadores = leerEntero("Numero de jugadores");
+        Modalidad modalidad = Modalidad.valueOf(
+                leer("Modalidad (SENCILLOS / DOBLES)").toUpperCase());
+
+        Reserva reserva = servicio.reservar(usuario, instalacion,
+                new BloqueHorario(fecha, inicio, fin), jugadores, modalidad);
+
+        System.out.println(">> Reserva creada con ID: " + reserva.getId());
+    }
+
+    private void verMisReservas(Usuario usuario) {
+        boolean hay = false;
         for (Reserva r : servicio.getHistorialReservas()) {
-
-            System.out.println(
-                "ID: " + r.getId()
-                + " | Instalacion: " + r.getInstalacion().getNombre()
-                + " | Fecha: " + r.getBloque().getFecha()
-                + " | Estado: " + r.getEstado()
-            );
+            if (r.getResponsable().getLogin().equals(usuario.getLogin())) {
+                hay = true;
+                System.out.println("ID: " + r.getId()
+                        + " | " + r.getInstalacion().getNombre()
+                        + " | " + r.getBloque().getFecha()
+                        + " " + r.getBloque().getHoraInicio()
+                        + " | Estado: " + r.getEstado());
+            }
+        }
+        if (!hay) {
+            System.out.println("No tienes reservas.");
         }
     }
 
-    private static void registrarIngreso() {
+    private void cancelarReserva(Usuario usuario) {
+        Reserva reserva = exigirReserva(leerEntero("ID de la reserva"));
+        servicio.cancelarReserva(usuario, reserva);
+        System.out.println(">> Reserva cancelada correctamente.");
+    }
 
-        if (reserva == null) {
-            System.out.println("Primero debes crear una reserva.");
+    private void registrarIngreso(Usuario usuario) {
+        Socio socio = comoSocio(usuario);
+        Reserva reserva = exigirReserva(leerEntero("ID de la reserva"));
+        servicio.registrarIngreso(socio, reserva, LocalDateTime.now());
+        System.out.println(">> Ingreso registrado correctamente.");
+    }
+
+    private void consultarRanking(Usuario usuario) {
+        Socio socio = comoSocio(usuario);
+        Disciplina disciplina = Disciplina.valueOf(
+                leer("Disciplina (TENIS, PADEL, TENIS_DE_MESA)").toUpperCase());
+        System.out.println("Tu ranking en " + disciplina + ": "
+                + servicio.getRanking(socio, disciplina) + " puntos");
+    }
+
+    private void consultarPartidos() {
+        if (servicio.getHistorialPartidosPractica().isEmpty()) {
+            System.out.println("No hay partidos de practica.");
             return;
         }
-
-        servicio.registrarIngreso(
-            socio,
-            reserva,
-            LocalDateTime.of(
-                reserva.getBloque().getFecha(),
-                reserva.getBloque().getHoraInicio()
-            )
-        );
-
-        System.out.println("Ingreso registrado correctamente.");
-    }
-
-    private static void cancelarReserva() {
-
-        if (reserva == null) {
-            System.out.println("Primero debes crear una reserva.");
-            return;
+        for (PartidoPractica p : servicio.getHistorialPartidosPractica()) {
+            System.out.println("ID: " + p.getId()
+                    + " | Fecha: " + p.getBloque().getFecha()
+                    + " | Jugado: " + p.isJugado());
         }
-
-        servicio.cancelarReserva(socio, reserva);
-
-        System.out.println("Reserva cancelada correctamente.");
-    }
-    
-
-private static void programarPartido() {
-
-    System.out.println("\n--- PROGRAMAR PARTIDO ---");
-
-    BloqueHorario bloque = new BloqueHorario(
-        LocalDate.now().plusDays(2),
-        LocalTime.of(14, 0),
-        LocalTime.of(15, 0)
-    );
-
-    partido = servicio.programarPartido(
-        socio,
-        instalacion,
-        bloque,
-        java.util.Arrays.asList(socio),
-        java.util.Arrays.asList(socio2)
-    );
-
-    System.out.println("Partido programado correctamente.");
-    System.out.println("ID: " + partido.getId());
-    System.out.println("Jugador A: " + socio.getNombre());
-    System.out.println("Jugador B: " + socio2.getNombre());
-}
-
-private static void consultarPartidos() {
-
-    System.out.println("\n--- PARTIDOS DE PRACTICA ---");
-
-    for (PartidoPractica p : servicio.getHistorialPartidosPractica()) {
-
-        System.out.println(
-            "ID: " + p.getId()
-            + " | Fecha: " + p.getBloque().getFecha()
-            + " | Jugado: " + p.isJugado()
-        );
-    }
-}
-
-private static void registrarResultado() {
-
-    if (partido == null) {
-        System.out.println("Primero debes programar un partido.");
-        return;
     }
 
-    System.out.println("\n--- REGISTRAR RESULTADO ---");
-
-    EstadisticaTenisPadel estadisticaA =
-        new EstadisticaTenisPadel(
-            socio, partido, 2, 12, 4, 3
-        );
-
-    EstadisticaTenisPadel estadisticaB =
-        new EstadisticaTenisPadel(
-            socio2, partido, 0, 5, 2, 6
-        );
-
-    servicio.registrarResultado(
-        partido,
-        java.util.Arrays.asList(estadisticaA, estadisticaB)
-    );
-
-    System.out.println("Resultado registrado correctamente.");
-    System.out.println("Ganador: " + socio.getNombre());
-}
-
-private static void consultarRanking() {
-
-    System.out.println("\n--- RANKING DE TENIS ---");
-
-    int ranking1 = servicio.getRanking(socio, Disciplina.TENIS);
-    int ranking2 = servicio.getRanking(socio2, Disciplina.TENIS);
-
-    System.out.println(socio.getNombre() + ": " + ranking1 + " puntos");
-    System.out.println(socio2.getNombre() + ": " + ranking2 + " puntos");
-}
-
-
-private static void programarSesion() {
-
-    System.out.println("\n--- PROGRAMAR SESION ---");
-
-    BloqueHorario bloque = new BloqueHorario(
-        LocalDate.now().plusDays(3),
-        LocalTime.of(9, 0),
-        LocalTime.of(10, 0)
-    );
-
-    sesion = new SesionEntrenamiento(
-        servicio.nuevoId(),
-        instalacion,
-        bloque,
-        entrenador,
-        TipoSesion.INDIVIDUAL
-    );
-
-    sesion.convocar(socio);
-    sesion.convocar(socio2);
-
-    servicio.getReservas().add(sesion);
-
-    System.out.println("Sesion creada correctamente.");
-    System.out.println("ID: " + sesion.getId());
-    System.out.println("Convocados: " + sesion.getConvocados().size());
-}
-
-private static void consultarSesiones() {
-
-    System.out.println("\n--- SESIONES DE ENTRENAMIENTO ---");
-
-    for (SesionEntrenamiento s : servicio.getHistorialSesiones()) {
-
-        System.out.println(
-            "ID: " + s.getId()
-            + " | Fecha: " + s.getBloque().getFecha()
-            + " | Entrenador: " + s.getEntrenador().getNombre()
-            + " | Convocados: " + s.getConvocados().size()
-        );
-    }
-}
-
-private static void registrarFeedback() {
-
-    if (sesion == null) {
-        System.out.println("Primero debes programar una sesion.");
-        return;
+    private void reporteAsistencia(Usuario usuario) {
+        if (!usuario.esAdministrador()) {
+            throw new ReglaDeNegocioException("Esta opcion es solo para administradores");
+        }
+        Disciplina disciplina = Disciplina.valueOf(
+                leer("Disciplina (TENIS, PADEL, TENIS_DE_MESA)").toUpperCase());
+        LocalDate desde = LocalDate.parse(leer("Desde (yyyy-MM-dd)"));
+        LocalDate hasta = LocalDate.parse(leer("Hasta (yyyy-MM-dd)"));
+        System.out.println(servicio.reporteAsistencia(disciplina, desde, hasta));
     }
 
-    System.out.println("\n--- REGISTRAR ASISTENCIA ---");
+    private void registrarInstalacion(Usuario usuario) {
+        if (!usuario.esAdministrador()) {
+            throw new ReglaDeNegocioException("Esta opcion es solo para administradores");
+        }
+        int codigo = leerEntero("Codigo");
+        String nombre = leer("Nombre");
+        String disciplina = leer("Disciplina (TENIS, PADEL, TENIS_DE_MESA)").toUpperCase();
+        int capacidad = leerEntero("Capacidad (2 o 4)");
+        boolean techada = leer("Techada (s/n)").equalsIgnoreCase("s");
 
-    sesion.registrarFeedback(
-        socio,
-        EstadoAsistencia.ASISTIO,
-        5,
-        "Excelente entrenamiento"
-    );
-
-    sesion.registrarFeedback(
-        socio2,
-        EstadoAsistencia.TARDE,
-        4,
-        "Llego unos minutos tarde"
-    );
-
-    System.out.println("Asistencias registradas correctamente.");
-}
-
-private static void consultarAsistencia() {
-
-    System.out.println("\n--- REPORTE DE ASISTENCIA ---");
-
-    String reporte = servicio.reporteAsistencia(
-        Disciplina.TENIS,
-        LocalDate.now(),
-        LocalDate.now().plusDays(7)
-    );
-
-    System.out.println(reporte);
-}
-
-
+        Instalacion nueva = servicio.registrarInstalacion(codigo, nombre, disciplina, capacidad, techada);
+        System.out.println(">> Instalacion registrada: " + nueva.getNombre());
+    }
 }

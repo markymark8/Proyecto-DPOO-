@@ -15,6 +15,7 @@ import club.persistencia.RepositorioComercio;
 import club.persistencia.RepositorioTorneos;
 import java.util.ArrayList;
 import club.modelo.usuarios.Empleado;
+import club.persistencia.RepositorioIndividual;
 
 public class ClubSeneca {
 
@@ -99,6 +100,8 @@ public class ClubSeneca {
 		RepositorioEstadisticas.cargar(carpetaDatos, this);
 		RepositorioComercio.cargar(carpetaDatos, this);
 		RepositorioTorneos.cargar(carpetaDatos, this);
+		RepositorioIndividual.cargar(carpetaDatos, this);
+		
 	}
 
 	// cada uno debería guardar sus propios archivod
@@ -109,6 +112,7 @@ public class ClubSeneca {
 		RepositorioEstadisticas.guardar(carpetaDatos, this);
 		RepositorioComercio.guardar(carpetaDatos, this);
 		 RepositorioTorneos.guardar(carpetaDatos, this);
+		 RepositorioIndividual.guardar(carpetaDatos, this);
 	}
 
 	public ArrayList<Empleado> getEmpleados() {
