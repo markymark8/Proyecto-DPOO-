@@ -4,13 +4,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import club.modelo.individual.BloqueHorario;
 import club.modelo.individual.Disciplina;
+import club.modelo.individual.EstadisticaIndividual;
+import club.modelo.individual.EstadisticaTenisDeMesa;
+import club.modelo.individual.EstadisticaTenisPadel;
 import club.modelo.individual.Instalacion;
 import club.modelo.individual.Modalidad;
 import club.modelo.individual.PartidoPractica;
+import club.modelo.individual.RegistroRanking;
 import club.modelo.individual.Reserva;
 import club.modelo.usuarios.Entrenador;
 import club.modelo.usuarios.Socio;
@@ -46,7 +52,7 @@ public class ConsolaIndividual {
         }
     }
 
-    // ------------------------------------------------------------------ menu
+    // menu
 
     private void mostrarMenu(Usuario usuario) {
         System.out.println();
@@ -61,17 +67,13 @@ public class ConsolaIndividual {
             System.out.println("5. Registrar ingreso a una reserva");
             System.out.println("6. Consultar mi ranking");
             System.out.println("7. Consultar partidos de practica");
-            // TODO (Daniel): 8. Programar partido de practica
-            // TODO (Daniel): 9. Ver mis estadisticas
-        }
-        if (usuario instanceof Entrenador) {
-            // TODO (Daniel): 10. Programar sesion de entrenamiento
-            // TODO (Daniel): 11. Registrar asistencia y feedback
+            System.out.println("8. Programar partido de practica");
+            System.out.println("9. Ver mis estadisticas");
         }
         if (usuario.esAdministrador()) {
             System.out.println("12. Reporte de asistencia");
             System.out.println("14. Registrar instalacion");
-            // TODO (Daniel): 13. Registrar resultado de un partido de practica
+            System.out.println("13. Registrar resultado de un partido de practica");
         }
         System.out.println("0. Volver");
         System.out.print("Opcion: ");
@@ -87,14 +89,17 @@ public class ConsolaIndividual {
             case "5": registrarIngreso(usuario); break;
             case "6": consultarRanking(usuario); break;
             case "7": consultarPartidos(); break;
+            case "8": programarPartido(usuario); break;
+            case "9": verMisEstadisticas(usuario); break;
             case "12": reporteAsistencia(usuario); break;
+            case "13": registrarResultadoPartido(usuario); break;
             case "14": registrarInstalacion(usuario); break;
             default: System.out.println("Opcion invalida.");
         }
         return false;
     }
 
-    // ------------------------------------------------------- lectura de datos
+    // lectura de datos
 
     private String leer(String mensaje) {
         System.out.print(mensaje + ": ");
@@ -235,5 +240,102 @@ public class ConsolaIndividual {
 
         Instalacion nueva = servicio.registrarInstalacion(codigo, nombre, disciplina, capacidad, techada);
         System.out.println(">> Instalacion registrada: " + nueva.getNombre());
+    }
+
+    // partidos de practica
+
+    private List<Socio> leerSocios(String mensaje) {
+        List<Socio> socios = new ArrayList<>();
+        for (String login : leer(mensaje).split(",")) {
+            Usuario u = club.buscarUsuario(login.trim());
+            if (!(u instanceof Socio)) {
+                throw new ReglaDeNegocioException("No existe el socio " + login.trim());
+            }
+            socios.add((Socio) u);
+        }
+        return socios;
+    }
+
+    private PartidoPractica exigirPartido(int id) {
+        for (PartidoPractica p : servicio.getHistorialPartidosPractica()) {
+            if (p.getId() == id) {
+                return p;
+            }
+        }
+        throw new ReglaDeNegocioException("No existe el partido de practica " + id);
+    }
+
+    private void programarPartido(Usuario usuario) {
+        comoSocio(usuario);
+        listarInstalaciones();
+        Instalacion instalacion = exigirInstalacion(leerEntero("Codigo de la instalacion"));
+        LocalDate fecha = LocalDate.parse(leer("Fecha (yyyy-MM-dd)"));
+        LocalTime inicio = LocalTime.parse(leer("Hora de inicio (HH:mm)"));
+        LocalTime fin = LocalTime.parse(leer("Hora de fin (HH:mm)"));
+        List<Socio> ladoA = leerSocios("Logins del lado A, separados por coma (incluya el suyo)");
+        List<Socio> ladoB = leerSocios("Logins del lado B, separados por coma");
+
+        PartidoPractica partido = servicio.programarPartido(usuario, instalacion,
+                new BloqueHorario(fecha, inicio, fin), ladoA, ladoB);
+        System.out.println(">> Partido de practica programado con ID: " + partido.getId()
+                + " (" + partido.getModalidad() + ")");
+    }
+
+    private void verMisEstadisticas(Usuario usuario) {
+        Socio socio = comoSocio(usuario);
+        Disciplina disciplina = Disciplina.valueOf(
+                leer("Disciplina (TENIS, PADEL, TENIS_DE_MESA)").toUpperCase());
+        List<EstadisticaIndividual> lista = servicio.getEstadisticas(socio, disciplina);
+        if (lista.isEmpty()) {
+            System.out.println("Todavia no tienes estadisticas en " + disciplina + ".");
+            return;
+        }
+        for (EstadisticaIndividual e : lista) {
+            String detalle = "";
+            if (e instanceof EstadisticaTenisPadel) {
+                EstadisticaTenisPadel t = (EstadisticaTenisPadel) e;
+                detalle = " | games " + t.getGamesGanados() + " | aces " + t.getAces()
+                        + " | errores no forzados " + t.getErroresNoForzados();
+            } else if (e instanceof EstadisticaTenisDeMesa) {
+                detalle = " | puntos totales " + ((EstadisticaTenisDeMesa) e).getPuntosTotales();
+            }
+            System.out.println("Partido " + e.getPartido().getId()
+                    + " | sets ganados " + e.getSetsGanados() + detalle);
+        }
+    }
+
+    private void registrarResultadoPartido(Usuario usuario) {
+        if (!usuario.esAdministrador()) {
+            throw new ReglaDeNegocioException("Esta opcion es solo para administradores");
+        }
+        consultarPartidos();
+        PartidoPractica partido = exigirPartido(leerEntero("ID del partido"));
+        Disciplina disciplina = Disciplina.valueOf(partido.getInstalacion().getDisciplina());
+
+        List<Socio> participantes = new ArrayList<>(partido.getLadoA());
+        participantes.addAll(partido.getLadoB());
+
+        List<EstadisticaIndividual> estadisticas = new ArrayList<>();
+        for (Socio s : participantes) {
+            System.out.println("Estadisticas de " + s.getLogin()
+                    + (partido.getLadoA().contains(s) ? " (lado A)" : " (lado B)"));
+            int sets = leerEntero("  Sets ganados");
+            if (disciplina == Disciplina.TENIS_DE_MESA) {
+                int puntos = leerEntero("  Puntos totales");
+                estadisticas.add(new EstadisticaTenisDeMesa(s, partido, sets, puntos));
+            } else {
+                int games = leerEntero("  Games ganados");
+                int aces = leerEntero("  Aces");
+                int errores = leerEntero("  Errores no forzados");
+                estadisticas.add(new EstadisticaTenisPadel(s, partido, sets, games, aces, errores));
+            }
+        }
+
+        servicio.registrarResultado(partido, estadisticas);
+        System.out.println(">> Resultado registrado. Cambios en el ranking:");
+        for (RegistroRanking r : partido.getRegistros()) {
+            System.out.println("   " + r.getSocio().getLogin() + ": "
+                    + r.getPuntajeAnterior() + " -> " + r.getPuntajeNuevo());
+        }
     }
 }
